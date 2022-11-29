@@ -2,28 +2,29 @@ package main
 
 import (
 	"fmt"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
-	"sync"
+	"math/rand"
+	"strconv"
 	"time"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-func sub() {
-	client := connect("tcp://localhost:1883", "subscriber")
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	client.Subscribe("temperature", 0, myfunction)
-	client.Subscribe("wind", 0, myfunction)
-	client.Subscribe("pressure", 0, myfunction)
-
-	wg.Wait()
-}
-
-func myfunction(client mqtt.Client, message mqtt.Message) {
-	fmt.Println(string(message.Payload()))
+func pub() {
+	client := connect("tcp://localhost:1883", "pressure")
+	for {
+		s1 := rand.NewSource(time.Now().UnixNano())
+		r1 := rand.New(s1)
+		randomIndex := r1.Intn(35)
+		temp := strconv.Itoa(randomIndex) + "°C"
+		fmt.Println(temp)
+		client.Publish("pressure", 0, false, temp).Wait()
+		time.Sleep(3 * time.Second)
+	}
 }
 
 func createClientOptions(brokerURI string, clientId string) *mqtt.ClientOptions {
+
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerURI)
 	opts.SetClientID(clientId)
@@ -31,7 +32,8 @@ func createClientOptions(brokerURI string, clientId string) *mqtt.ClientOptions 
 }
 
 func connect(brokerURI string, clientId string) mqtt.Client {
-	fmt.Println("Trying to connect (" + brokerURI + ", " + clientId + ")...")
+
+	fmt.Println("Connexion ok (" + brokerURI + ", " + clientId + ")")
 	opts := createClientOptions(brokerURI, clientId)
 	client := mqtt.NewClient(opts)
 	token := client.Connect()

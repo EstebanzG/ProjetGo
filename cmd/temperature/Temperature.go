@@ -10,15 +10,15 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-func pub(topic string) {
-	client := connect("tcp://localhost:1883", "publisher")
+func pub() {
+	client := connect("tcp://localhost:1883", "temperature")
 	for {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r1 := rand.New(s1)
 		randomIndex := r1.Intn(35)
 		temp := strconv.Itoa(randomIndex) + "°C"
 		fmt.Println(temp)
-		client.Publish(topic, 0, false, temp).Wait()
+		client.Publish("temperature", 0, false, temp).Wait()
 		time.Sleep(3 * time.Second)
 	}
 }
