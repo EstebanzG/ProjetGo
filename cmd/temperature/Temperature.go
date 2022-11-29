@@ -2,16 +2,15 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"strconv"
 	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"foo.org/myapp/internal/server"
 )
 
 func pub() {
-	client := connect("tcp://localhost:1883", "temperature")
+	client := server.Connect("tcp://localhost:1883", "temperature")
 	for {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r1 := rand.New(s1)
@@ -21,26 +20,4 @@ func pub() {
 		client.Publish("temperature", 0, false, temp).Wait()
 		time.Sleep(3 * time.Second)
 	}
-}
-
-func createClientOptions(brokerURI string, clientId string) *mqtt.ClientOptions {
-
-	opts := mqtt.NewClientOptions()
-	opts.AddBroker(brokerURI)
-	opts.SetClientID(clientId)
-	return opts
-}
-
-func connect(brokerURI string, clientId string) mqtt.Client {
-
-	fmt.Println("Connexion ok (" + brokerURI + ", " + clientId + ")")
-	opts := createClientOptions(brokerURI, clientId)
-	client := mqtt.NewClient(opts)
-	token := client.Connect()
-	for !token.WaitTimeout(3 * time.Second) {
-	}
-	if err := token.Error(); err != nil {
-		log.Fatal(err)
-	}
-	return client
 }

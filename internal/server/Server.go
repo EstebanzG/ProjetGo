@@ -1,27 +1,11 @@
-package main
+package server
 
 import (
 	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
-	"sync"
 	"time"
 )
-
-func sub() {
-	client := connect("tcp://localhost:1883", "subscriber")
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	client.Subscribe("temperature", 0, myfunction)
-	client.Subscribe("wind", 0, myfunction)
-	client.Subscribe("pressure", 0, myfunction)
-
-	wg.Wait()
-}
-
-func myfunction(client mqtt.Client, message mqtt.Message) {
-	fmt.Println(string(message.Payload()))
-}
 
 func createClientOptions(brokerURI string, clientId string) *mqtt.ClientOptions {
 	opts := mqtt.NewClientOptions()
@@ -30,7 +14,7 @@ func createClientOptions(brokerURI string, clientId string) *mqtt.ClientOptions 
 	return opts
 }
 
-func connect(brokerURI string, clientId string) mqtt.Client {
+func Connect(brokerURI string, clientId string) mqtt.Client {
 	fmt.Println("Trying to connect (" + brokerURI + ", " + clientId + ")...")
 	opts := createClientOptions(brokerURI, clientId)
 	client := mqtt.NewClient(opts)
