@@ -14,7 +14,6 @@ func sub() {
 	client.Subscribe("temperature", 0, myfunction)
 	client.Subscribe("wind", 0, myfunction)
 	client.Subscribe("pressure", 0, myfunction)
-
 	wg.Wait()
 }
 

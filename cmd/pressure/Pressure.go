@@ -11,6 +11,7 @@ import (
 
 func pub() {
 	client := server.Connect("tcp://localhost:1883", "pressure")
+
 	for {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r1 := rand.New(s1)
