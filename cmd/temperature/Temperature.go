@@ -18,6 +18,6 @@ func pub() {
 		temp := strconv.Itoa(randomIndex) + "°C"
 		fmt.Println(temp)
 		client.Publish("temperature", 0, false, temp).Wait()
-		time.Sleep(3 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
