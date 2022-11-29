@@ -11,7 +11,7 @@ import (
 )
 
 
-func pub(topic string) {
+func pub(topic string, port string, url string, protocol string) {
 	fmt.Println("Publisher OK")
 	client := connect("tcp://localhost:1883", "publisher")
 	for {
