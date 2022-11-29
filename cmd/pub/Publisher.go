@@ -2,12 +2,45 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"math/rand"
+	"strconv"
+	"time"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-func pub(topic string, message string) {
-	fmt.Println("hello world")
-	client := connect("tcp://localhost:1883", "my-client-id")
-	fmt.Println("connexion ok")
-	client.Publish(topic, 0, false, message).Wait()
-	fmt.Println("publish ok")
+func pub(topic string) {
+	client := connect("tcp://localhost:1883", "publisher")
+	for {
+		s1 := rand.NewSource(time.Now().UnixNano())
+		r1 := rand.New(s1)
+		randomIndex := r1.Intn(35)
+		temp := strconv.Itoa(randomIndex) + "°C"
+		fmt.Println(temp)
+		client.Publish(topic, 0, false, temp).Wait()
+		time.Sleep(3 * time.Second)
+	}
+}
+
+func createClientOptions(brokerURI string, clientId string) *mqtt.ClientOptions {
+
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(brokerURI)
+	opts.SetClientID(clientId)
+	return opts
+}
+
+func connect(brokerURI string, clientId string) mqtt.Client {
+
+	fmt.Println("Connexion ok (" + brokerURI + ", " + clientId + ")")
+	opts := createClientOptions(brokerURI, clientId)
+	client := mqtt.NewClient(opts)
+	token := client.Connect()
+	for !token.WaitTimeout(3 * time.Second) {
+	}
+	if err := token.Error(); err != nil {
+		log.Fatal(err)
+	}
+	return client
 }
