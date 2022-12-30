@@ -1,4 +1,0 @@
-http:
-  port: "1883"
-  protocol: "tcp"
-  url: "localhost"

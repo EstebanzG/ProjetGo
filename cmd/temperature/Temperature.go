@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"foo.org/myapp/internal/config"
 	"math/rand"
 	"strconv"
 	"time"
@@ -10,7 +11,7 @@ import (
 )
 
 func pub() {
-	client := server.Connect("tcp://localhost:1883", "temperature")
+	client := server.Connect(config.GetFullURL(), "temperature")
 	for {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r1 := rand.New(s1)

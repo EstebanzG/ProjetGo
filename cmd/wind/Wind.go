@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"foo.org/myapp/internal/config"
 	"math/rand"
 	"time"
 
@@ -9,17 +10,17 @@ import (
 )
 
 func pub() {
-	client := server.Connect("tcp://localhost:1883", "wind")
+	fmt.Println(config.GetFullURL())
+	client := server.Connect(config.GetFullURL(), "wind")
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
 	wind := r1.Float32()*15 + 5.00
 
 	for {
-		//speed 1 normal or 4 acc
 		wind = calculateNewWind(wind, 1.00) //strconv.Itoa(randomIndex)
 		fmt.Println(wind)
 		client.Publish("wind", 0, false, wind).Wait()
-		time.Sleep(1 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
 
