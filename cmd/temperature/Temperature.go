@@ -12,6 +12,7 @@ import (
 
 func pub() {
 	client := server.Connect(config.GetFullURL(), "temperature")
+
 	for {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r1 := rand.New(s1)

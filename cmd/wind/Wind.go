@@ -10,16 +10,16 @@ import (
 )
 
 func pub() {
-	fmt.Println(config.GetFullURL())
-	client := server.Connect(config.GetFullURL(), "wind")
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
 	wind := r1.Float32()*15 + 5.00
+	client := server.Connect(config.GetFullURL(), "wind")
 
 	for {
 		wind = calculateNewWind(wind, 1.00) //strconv.Itoa(randomIndex)
 		fmt.Println(wind)
-		client.Publish("wind", 0, false, wind).Wait()
+		windString := fmt.Sprintf("%f", wind)
+		client.Publish("wind", 0, false, windString).Wait()
 		time.Sleep(10 * time.Second)
 	}
 }
