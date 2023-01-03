@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func FormatData(sensorId int, airportID string, measureNature string, value float32) {
+func FormatData(sensorId int, airportID int, measureNature string, value float32) []byte {
 	data := map[string]interface{}{
 		"sensorID":      sensorId,
 		"airportID":     airportID,
@@ -18,8 +18,8 @@ func FormatData(sensorId int, airportID string, measureNature string, value floa
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		fmt.Printf("could not marshal json: %s\n", err)
-		return
+		return nil
 	}
-
 	fmt.Printf("json data: %s\n", jsonData)
+	return jsonData
 }

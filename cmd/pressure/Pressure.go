@@ -2,13 +2,16 @@ package main
 
 import (
 	"fmt"
+	"foo.org/myapp/internal/format"
 	"math/rand"
-	"strconv"
 	"time"
 
 	"foo.org/myapp/internal/config"
 	"foo.org/myapp/internal/server"
 )
+
+var idCapteur = config.GetPressureSensorId()
+var airportId = config.GetAirportId()
 
 func pub() {
 	client := server.Connect(config.GetFullURL(), "pressure")
@@ -16,10 +19,10 @@ func pub() {
 	for {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r1 := rand.New(s1)
-		randomIndex := r1.Intn(35)
-		temp := strconv.Itoa(randomIndex) + "°C"
-		fmt.Println(temp)
-		client.Publish("pressure", 0, false, temp).Wait()
+		press := r1.Intn(35)
+		fmt.Println(press)
+		dataToSend := format.FormatData(idCapteur, airportId, "pressure", float32(press))
+		client.Publish("pressure", 0, false, dataToSend).Wait()
 		time.Sleep(10 * time.Second)
 	}
 }

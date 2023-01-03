@@ -2,3 +2,11 @@ http:
   port: "1883"
   protocol: "tcp"
   url: "localhost"
+
+info:
+  wind-sensor-id: 5
+  temperature-sensor-id: 5
+  pressure-sensor-id: 5
+  airport-id: 5
+
+

@@ -14,23 +14,12 @@ func sub() {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	//Mettre en place un client.SuscribeMultiple()
-	client.Subscribe("temperature", 0, receiveTemperature)
-	client.Subscribe("wind", 0, receiveWind)
-	client.Subscribe("pressure", 0, receivePressure)
+	client.Subscribe("temperature", 0, received)
+	client.Subscribe("wind", 0, received)
+	client.Subscribe("pressure", 0, received)
 	wg.Wait()
 }
 
-func receiveTemperature(client mqtt.Client, message mqtt.Message) {
-	fmt.Println("Temp")
-	fmt.Println(string(message.Payload()))
-}
-
-func receiveWind(client mqtt.Client, message mqtt.Message) {
-	fmt.Println("Wind")
-	fmt.Println(string(message.Payload()))
-}
-
-func receivePressure(client mqtt.Client, message mqtt.Message) {
-	fmt.Println("Pressure")
+func received(client mqtt.Client, message mqtt.Message) {
 	fmt.Println(string(message.Payload()))
 }

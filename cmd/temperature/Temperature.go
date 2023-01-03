@@ -3,12 +3,15 @@ package main
 import (
 	"fmt"
 	"foo.org/myapp/internal/config"
+	"foo.org/myapp/internal/format"
 	"math/rand"
-	"strconv"
 	"time"
 
 	"foo.org/myapp/internal/server"
 )
+
+var idCapteur = config.GetTemperatureSensorId()
+var airportId = config.GetAirportId()
 
 func pub() {
 	client := server.Connect(config.GetFullURL(), "temperature")
@@ -16,10 +19,10 @@ func pub() {
 	for {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r1 := rand.New(s1)
-		randomIndex := r1.Intn(35)
-		temp := strconv.Itoa(randomIndex) + "°C"
+		temp := r1.Intn(35)
 		fmt.Println(temp)
-		client.Publish("temperature", 0, false, temp).Wait()
+		dataToSend := format.FormatData(idCapteur, airportId, "temperature", float32(temp))
+		client.Publish("temperature", 0, false, dataToSend).Wait()
 		time.Sleep(10 * time.Second)
 	}
 }

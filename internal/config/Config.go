@@ -1,49 +1,74 @@
 package config
 
 import (
+	"gopkg.in/yaml.v3"
 	"log"
 	"os"
-
-	"gopkg.in/yaml.v3"
 )
 
 type config struct {
 	HTTP struct {
-		Port     string `yaml:"port"`
+		Port     string
 		Url      string `yaml:"url"`
 		Protocol string `yaml:"protocol"`
-	}
+	} `yaml:"http"`
+	Info struct {
+		WindSensorId        int `yaml:"wind-sensor-id"`
+		TemperatureSensorId int `yaml:"temperature-sensor-id"`
+		PressureSensorId    int `yaml:"pressure-sensor-id"`
+		AirportId           int `yaml:"airport-id"`
+	} `yaml:"info"`
 }
 
-func (c *config) getConfig() *config {
+var c *config
+
+func init() {
+	c = new(config)
+	c.getConfig()
+}
+
+func (conf *config) getConfig() *config {
 	yamlFile, err := os.ReadFile("../../internal/config/config.yaml")
 	if err != nil {
 		log.Printf("yamlFile.Get err   #%v ", err)
 	}
-	err = yaml.Unmarshal(yamlFile, c)
+	err = yaml.Unmarshal(yamlFile, conf)
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
 	}
-
-	return c
+	return conf
 }
 
 func getPort() string {
-	var c config
 	return c.getConfig().HTTP.Port
 }
 
 func getURL() string {
-	var c config
 	return c.getConfig().HTTP.Url
 }
 
 func getProtocol() string {
-	var c config
 	return c.getConfig().HTTP.Protocol
 }
 
 func GetFullURL() string {
 	fullURL := getProtocol() + "://" + getURL() + ":" + getPort()
 	return fullURL
+}
+
+func GetWindSensorId() int {
+	return c.getConfig().Info.WindSensorId
+}
+
+func GetTemperatureSensorId() int {
+	return c.getConfig().Info.TemperatureSensorId
+
+}
+
+func GetPressureSensorId() int {
+	return c.getConfig().Info.PressureSensorId
+}
+
+func GetAirportId() int {
+	return c.getConfig().Info.AirportId
 }

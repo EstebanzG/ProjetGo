@@ -3,11 +3,15 @@ package main
 import (
 	"fmt"
 	"foo.org/myapp/internal/config"
+	"foo.org/myapp/internal/format"
 	"math/rand"
 	"time"
 
 	"foo.org/myapp/internal/server"
 )
+
+var idCapteur = config.GetWindSensorId()
+var airportId = config.GetAirportId()
 
 func pub() {
 	s1 := rand.NewSource(time.Now().UnixNano())
@@ -18,8 +22,8 @@ func pub() {
 	for {
 		wind = calculateNewWind(wind, 1.00) //strconv.Itoa(randomIndex)
 		fmt.Println(wind)
-		windString := fmt.Sprintf("%f", wind)
-		client.Publish("wind", 0, false, windString).Wait()
+		dataToSend := format.FormatData(idCapteur, airportId, "wind", float32(wind))
+		client.Publish("wind", 0, false, dataToSend).Wait()
 		time.Sleep(10 * time.Second)
 	}
 }
