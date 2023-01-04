@@ -1,0 +1,116 @@
+body {
+  background: #1b213b;
+  color: #777;
+  font-family: Montserrat, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#wrapper {
+  width: 100%;
+  align-items: center;
+  align-content: center;
+}
+
+.charts {
+  margin: 0;
+  display: flex;
+  max-width: 100vw;
+  justify-content: space-between;
+}
+
+.content-area {
+  width: 100%;
+  align-items: center;
+  align-content: center;
+}
+
+.container-fluid {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: center;
+}
+
+.main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.textInfo {
+  color: white;
+}
+
+.infos {
+  margin-top: 2%;
+}
+
+.textDataBold {
+  font-weight: bold;
+  line-height: 15px;
+}
+
+.body-bg {
+  background: #f3f4fa !important;
+}
+
+h1 {
+  color: white;
+  font-weight: bold;
+  font-size: 16pt;
+  margin: 0;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6,
+strong {
+  font-weight: 600;
+}
+
+.sparkboxes {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.box .apexcharts-xaxistooltip {
+  background: #1b213b;
+  color: #fff;
+}
+
+.content-area {
+  max-width: 100vw;
+  padding: 2%;
+}
+
+.box {
+  background-color: #262d47;
+  padding: 25px 25px;
+  border-radius: 4px;
+}
+
+.spinner-border {
+  display: none;
+}
+
+.sparkboxes .box1 {
+  background-image: linear-gradient(135deg, #779bb5 10%, #0269b2 100%);
+}
+
+.sparkboxes .box2 {
+  background-image: linear-gradient(135deg, #1daf9c 10%, #3359b2 100%);
+}
+
+.sparkboxes .box3 {
+  background-image: linear-gradient(135deg, #ac8e6d 10%, #a84157 100%);
+}
+
+.img_icon {
+  width: 16px;
+  height: 16px;
+}
