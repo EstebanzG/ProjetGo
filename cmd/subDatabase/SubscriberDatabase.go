@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"foo.org/myapp/internal/config"
 	"foo.org/myapp/internal/database"
 	"foo.org/myapp/internal/entities"
@@ -35,6 +36,7 @@ func addToDatabase(client mqtt.Client, message mqtt.Message) {
 
 	cle := objet.MeasureNature + "//" + objet.Date
 	value := format.FormatDataToStore(objet.SensorId, objet.AirportID, objet.Value)
+	fmt.Println(cle)
 
 	conn := database.GetConnexion()
 	_, err = conn.Do("SET", cle, value)
