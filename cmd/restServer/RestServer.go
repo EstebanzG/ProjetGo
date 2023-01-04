@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/temp", rest.GetAllSensor)
+	http.HandleFunc("/dataFromTo", rest.GetAllSensor)
 	http.ListenAndServe(":8080", nil)
 }

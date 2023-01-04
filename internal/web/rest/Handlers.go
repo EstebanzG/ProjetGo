@@ -7,7 +7,7 @@ import (
 )
 
 func GetAllSensor(w http.ResponseWriter, r *http.Request) {
-	data := persistence.SelectAll()
+	data := persistence.SelectDataSensorFromTo("wind")
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
