@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"foo.org/myapp/internal/config"
 	"foo.org/myapp/internal/database"
+	"foo.org/myapp/internal/entities"
 	"foo.org/myapp/internal/format"
 	"foo.org/myapp/internal/server"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -19,14 +20,14 @@ func sub() {
 	client := server.Connect(config.GetFullURL(), "subscriber")
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	client.Subscribe("temperature", 0, received)
-	client.Subscribe("wind", 0, received)
-	client.Subscribe("pressure", 0, received)
+	client.Subscribe("temperature", 0, addToDatabase)
+	client.Subscribe("wind", 0, addToDatabase)
+	client.Subscribe("pressure", 0, addToDatabase)
 	wg.Wait()
 }
 
-func received(client mqtt.Client, message mqtt.Message) {
-	objet := format.DataSend{}
+func addToDatabase(client mqtt.Client, message mqtt.Message) {
+	objet := entities.Sensor{}
 	err := json.Unmarshal(message.Payload(), &objet)
 	if err != nil {
 		return

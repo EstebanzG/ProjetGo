@@ -28,7 +28,7 @@ func init() {
 }
 
 func (conf *config) getConfig() *config {
-	yamlFile, err := os.ReadFile("../../internal/config/config.yaml")
+	yamlFile, err := os.ReadFile("../internal/config/config.yaml")
 	if err != nil {
 		log.Printf("yamlFile.Get err   #%v ", err)
 	}
