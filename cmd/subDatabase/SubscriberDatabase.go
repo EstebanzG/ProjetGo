@@ -33,10 +33,10 @@ func addToDatabase(client mqtt.Client, message mqtt.Message) {
 	if err != nil {
 		return
 	}
-
-	cle := objet.MeasureNature + "//" + objet.Date
-	value := format.FormatDataToStore(objet.SensorId, objet.AirportID, objet.Value)
-	fmt.Println(cle)
+	//TODO: la conversion en string n'est pas forcement bonne
+	cle := format.DataKeyToStore(objet.AirportID, objet.Date, objet.MeasureNature, string(objet.SensorId))
+	value := format.DataToStore(objet.Value)
+	fmt.Println(string(cle))
 
 	conn := database.GetConnexion()
 	_, err = conn.Do("SET", cle, value)

@@ -5,30 +5,40 @@ import (
 	"fmt"
 	"foo.org/myapp/internal/database"
 	"foo.org/myapp/internal/entities"
+	"foo.org/myapp/internal/format"
 	"github.com/gomodule/redigo/redis"
 	"log"
-	"strings"
+	"strconv"
 )
 
 func SelectDataSensorFromTo(sensorType string) []entities.Sensor {
 	conn := database.GetConnexion()
-	keys, err := redis.Strings(conn.Do("KEYS", sensorType+"//*"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return GetForKeys(keys)
-}
-
-func SelectAllDataForADay() ([]entities.Sensor, []entities.Sensor, []entities.Sensor) {
-	conn := database.GetConnexion()
-	windKeys, err := redis.Strings(conn.Do("KEYS", "wind//2023-01-04*"))
-	temperatureKeys, err := redis.Strings(conn.Do("KEYS", "temperature//2023-01-04*"))
-	pressureKeys, err := redis.Strings(conn.Do("KEYS", "pressure//2023-01-04*"))
+	cle := format.DataKeyToStore("*", "*", sensorType, "*")
+	keys, err := redis.Strings(conn.Do("KEYS", cle))
 	if err != nil {
 		log.Fatal(err)
 	}
 	conn.Close()
-	return GetForKeys(windKeys), GetForKeys(temperatureKeys), GetForKeys(pressureKeys)
+	return GetForKeys(keys)
+}
+
+func SelectAllDataForADay(date string) map[string][]entities.Sensor {
+	conn := database.GetConnexion()
+	measuresNatures := []string{"wind", "temperature", "pressure"}
+	allMeasures := make(map[string][]entities.Sensor)
+
+	for _, measureNature := range measuresNatures {
+		cle := format.DataKeyToStore("*", date+"*", measureNature, "*")
+		keys, err := redis.Strings(conn.Do("KEYS", cle))
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(keys) != 0 {
+			allMeasures[measureNature] = GetForKeys(keys)
+		}
+	}
+	conn.Close()
+	return allMeasures
 }
 
 func GetForKeys(keys []string) []entities.Sensor {
@@ -36,22 +46,27 @@ func GetForKeys(keys []string) []entities.Sensor {
 	var objects []entities.Sensor
 	for _, key := range keys {
 		value, _ := redis.Bytes(conn.Do("GET", key))
-		objetMem := entities.SensorMem{}
-		err := json.Unmarshal(value, &objetMem)
+		objectMem := entities.SensorMem{}
+		err := json.Unmarshal(value, &objectMem)
 		if err != nil {
 			fmt.Println(err)
 			return nil
 		}
-		parts := strings.Split(key, "//")
-		measureNature := parts[0]
-		date := parts[1]
+		objectMemKey := entities.SensorMemKey{}
+		err = json.Unmarshal([]byte(key), &objectMemKey)
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+
+		sensorId, _ := strconv.Atoi(objectMemKey.SensorId)
 
 		object := entities.Sensor{
-			AirportID:     objetMem.AirportID,
-			Date:          date,
-			MeasureNature: measureNature,
-			SensorId:      objetMem.SensorId,
-			Value:         objetMem.Value,
+			AirportID:     objectMemKey.AirportID,
+			Date:          objectMemKey.Date,
+			MeasureNature: objectMemKey.MeasureNature,
+			SensorId:      sensorId,
+			Value:         objectMem.Value,
 		}
 		objects = append(objects, object)
 	}
