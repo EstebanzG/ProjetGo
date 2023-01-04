@@ -7,7 +7,6 @@ import (
 	"foo.org/myapp/internal/entities"
 	"github.com/gomodule/redigo/redis"
 	"log"
-	"math/rand"
 	"strings"
 )
 
@@ -17,21 +16,7 @@ func SelectDataSensorFromTo(sensorType string) []entities.Sensor {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, key := range keys {
-		fmt.Println(key)
-	}
-	numReadings := 10
-	readings := make([]entities.Sensor, numReadings)
-	for i := 0; i < numReadings; i++ {
-		readings[i] = entities.Sensor{
-			AirportID:     "NTS",
-			Date:          "2023",
-			MeasureNature: "NTS",
-			SensorId:      i,
-			Value:         rand.Float32() * 100,
-		}
-	}
-	return readings
+	return GetForKeys(keys)
 }
 
 func SelectAllDataForADay() ([]entities.Sensor, []entities.Sensor, []entities.Sensor) {
