@@ -13,10 +13,10 @@ type config struct {
 		Protocol string `yaml:"protocol"`
 	} `yaml:"http"`
 	Info struct {
-		WindSensorId        int `yaml:"wind-sensor-id"`
-		TemperatureSensorId int `yaml:"temperature-sensor-id"`
-		PressureSensorId    int `yaml:"pressure-sensor-id"`
-		AirportId           int `yaml:"airport-id"`
+		WindSensorId        int    `yaml:"wind-sensor-id"`
+		TemperatureSensorId int    `yaml:"temperature-sensor-id"`
+		PressureSensorId    int    `yaml:"pressure-sensor-id"`
+		AirportId           string `yaml:"airport-id"`
 	} `yaml:"info"`
 }
 
@@ -62,13 +62,12 @@ func GetWindSensorId() int {
 
 func GetTemperatureSensorId() int {
 	return c.getConfig().Info.TemperatureSensorId
-
 }
 
 func GetPressureSensorId() int {
 	return c.getConfig().Info.PressureSensorId
 }
 
-func GetAirportId() int {
+func GetAirportId() string {
 	return c.getConfig().Info.AirportId
 }

@@ -1,19 +1,24 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"foo.org/myapp/internal/config"
+	"foo.org/myapp/internal/database"
+	"foo.org/myapp/internal/format"
 	"foo.org/myapp/internal/server"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"log"
 	"sync"
 )
 
-func sub() {
+func main() {
+	sub()
+}
 
+func sub() {
 	client := server.Connect(config.GetFullURL(), "subscriber")
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	//Mettre en place un client.SuscribeMultiple()
 	client.Subscribe("temperature", 0, received)
 	client.Subscribe("wind", 0, received)
 	client.Subscribe("pressure", 0, received)
@@ -21,5 +26,20 @@ func sub() {
 }
 
 func received(client mqtt.Client, message mqtt.Message) {
-	fmt.Println(string(message.Payload()))
+	objet := format.DataSend{}
+	err := json.Unmarshal(message.Payload(), &objet)
+	if err != nil {
+		return
+	}
+
+	cle := objet.MeasureNature + "//" + objet.Date
+	value := format.FormatDataToStore(objet.SensorId, objet.AirportID, objet.Value)
+
+	conn := database.GetConnexion()
+	_, err = conn.Do("SET", cle, value)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	conn.Close()
 }
