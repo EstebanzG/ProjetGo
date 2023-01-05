@@ -9,17 +9,39 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"log"
 	"strconv"
+	"time"
 )
 
-func SelectDataSensorFromTo(sensorType string) []entities.Sensor {
+func SelectByType(sensorType string) []entities.Sensor {
 	conn := database.GetConnexion()
-	cle := format.DataKeyToStore("*", "*", sensorType, "*")
-	keys, err := redis.Strings(conn.Do("KEYS", cle))
+	keysFormat := format.DataKeyToStore("*", "*", sensorType, "*")
+	keys, err := redis.Strings(conn.Do("KEYS", keysFormat))
 	if err != nil {
 		log.Fatal(err)
 	}
-	conn.Close()
 	return GetForKeys(keys)
+}
+
+func SelectAllSensorTypeDateHour(sensorType string, allDates []time.Time) []entities.Sensor {
+	conn := database.GetConnexion()
+	var res []entities.Sensor
+
+	for _, d := range allDates {
+		//delete minutes and seconds
+		s := []rune(d.Format("2006-01-02 15:04:05"))
+		sCut := string(s[:len(s)-6])
+
+		cle := format.DataKeyToStore("*", sCut+"*", sensorType, "*")
+		keys, err := redis.Strings(conn.Do("KEYS", cle))
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(keys) != 0 {
+			res = append(res, GetForKeys(keys)...)
+		}
+	}
+	conn.Close()
+	return res
 }
 
 func SelectAllDataForADay(date string) map[string][]entities.Sensor {
