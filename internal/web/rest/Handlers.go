@@ -34,40 +34,49 @@ func GetBySensorType(w http.ResponseWriter, r *http.Request) {
 
 func format_date(date string) (time.Time, error) {
 	index := strings.LastIndex(date, "-")
-	byte := []byte(date)
-	byte[index] = ' '
-	date = string(byte)
+	b := []byte(date)
+	b[index] = ' '
+	date = string(b)
 
-	return time.Parse("2000-01-01 10:10:10", date)
+	return time.Parse("2006-01-02 15:04", date)
 }
 
-func between_date(start, end time.Time) []time.Time {
+func keys_between_date(start, end time.Time, keysSensor []string) []string {
 	y, m, d := start.Date()
-	start = time.Date(y, m, d, start.Hour(), 0, 0, 0, time.UTC)
+	start = time.Date(y, m, d, start.Hour(), start.Minute(), 0, 0, time.UTC)
 	y, m, d = end.Date()
-	end = time.Date(y, m, d, start.Hour(), 0, 0, 0, time.UTC)
+	end = time.Date(y, m, d, end.Hour(), end.Minute(), 0, 0, time.UTC)
 
-	var res []time.Time
+	var res []string
 
-	for start.Before(end) {
-		res = append(res, start)
-		start = start.Add(time.Hour)
+	for _, key := range keysSensor {
+		var elem entities.MeasureMemKey
+		json.Unmarshal([]byte(key), &elem)
+		date_time, _ := format_date(elem.Date[:len(elem.Date)-3])
+
+		y, m, d = date_time.Date()
+		date_time = time.Date(y, m, d, date_time.Hour(), date_time.Minute(), 0, 0, time.UTC)
+
+		if (date_time.After(start) && date_time.Before(end)) || date_time.Equal(start) {
+			res = append(res, key)
+		}
 	}
-	res = append(res, end)
 	return res
 }
 
-func GetBySensorTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
+func GetDataSensorBetweenDate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sensorType := vars["sensorType"]
 	date1 := vars["date1"]
 	date2 := vars["date2"]
-	match2, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}:[0-9]{2}$", date1)
-	match1, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}:[0-9]{2}$", date2)
+	match1, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}$", date1)
+	match2, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}$", date2)
+
 	if !match1 || !match2 {
-		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", http.StatusBadRequest)
+		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD-hh:mm", http.StatusBadRequest)
 		return
 	}
+
 	date1_time, err1 := format_date(date1)
 	if err1 != nil {
 		http.Error(w, err1.Error(), http.StatusInternalServerError)
@@ -78,14 +87,19 @@ func GetBySensorTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err2.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	if date1_time.After(date2_time) {
 		tmp := date1_time
 		date1_time = date2_time
 		date2_time = tmp
 	}
 
-	allDates := between_date(date1_time, date2_time)
-	data := persistence.SelectAllSensorTypeDateHour(sensorType, allDates)
+	allKeys := keys_between_date(date1_time, date2_time, persistence.SelectKeysByType(sensorType))
+	if len(allKeys) == 0 {
+		http.Error(w, "No data available for this measure type", http.StatusNoContent)
+		return
+	}
+	data := persistence.GetForKeys(allKeys)
 	if len(data) == 0 {
 		http.Error(w, "No data available for this measure type", http.StatusNoContent)
 		return

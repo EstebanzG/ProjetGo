@@ -8,43 +8,29 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"log"
 	"strconv"
-	"time"
 )
 
 func SelectByType(sensorType string) []entities.MeasureValue {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
-
 	keysFormat := format.DataKeyToStore("*", "*", sensorType, "*")
 	keys, err := redis.Strings(conn.Do("KEYS", keysFormat))
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	return GetForKeys(keys)
 }
 
-func SelectAllSensorTypeDateHour(sensorType string, allDates []time.Time) []entities.MeasureValue {
+func SelectKeysByType(sensorType string) []string {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
 
-	var res []entities.MeasureValue
-	for _, d := range allDates {
-		//delete minutes and seconds
-		s := []rune(d.Format("2006-01-02 15:04:05"))
-		sCut := string(s[:len(s)-6])
-
-		keyFormat := format.DataKeyToStore("*", sCut+"*", sensorType, "*")
-		keys, err := redis.Strings(conn.Do("KEYS", keyFormat))
-		if err != nil {
-			log.Fatal(err)
-		}
-		if len(keys) != 0 {
-			res = append(res, GetForKeys(keys)...)
-		}
+	keyFormat := format.DataKeyToStore("*", "*", sensorType, "*")
+	keys, err := redis.Strings(conn.Do("KEYS", keyFormat))
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	return res
+	return keys
 }
 
 func SelectAllDataForADay(airportIATA string, date string) map[string][]entities.MeasureValue {
@@ -64,7 +50,6 @@ func SelectAllDataForADay(airportIATA string, date string) map[string][]entities
 			allMeasures[measureNature] = GetForKeys(keys)
 		}
 	}
-
 	return allMeasures
 }
 
