@@ -6,6 +6,7 @@ import (
 	"foo.org/myapp/internal/entities"
 	"foo.org/myapp/internal/persistence"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -26,47 +27,56 @@ func GetBySensorType(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(jsonData)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		return
 	}
 }
 
 func format_date(date string) (time.Time, error) {
 	index := strings.LastIndex(date, "-")
-	byte := []byte(date)
-	byte[index] = ' '
-	date = string(byte)
+	b := []byte(date)
+	b[index] = ' '
+	date = string(b)
 
-	return time.Parse("2000-01-01 10:10:10", date)
+	return time.Parse("2006-01-02 15:04", date)
 }
 
-func between_date(start, end time.Time) []time.Time {
+func keys_between_date(start, end time.Time, keysSensor []string) []string {
 	y, m, d := start.Date()
-	start = time.Date(y, m, d, start.Hour(), 0, 0, 0, time.UTC)
+	start = time.Date(y, m, d, start.Hour(), start.Minute(), 0, 0, time.UTC)
 	y, m, d = end.Date()
-	end = time.Date(y, m, d, start.Hour(), 0, 0, 0, time.UTC)
+	end = time.Date(y, m, d, end.Hour(), end.Minute(), 0, 0, time.UTC)
 
-	var res []time.Time
+	var res []string
 
-	for start.Before(end) {
-		res = append(res, start)
-		start = start.Add(time.Hour)
+	for _, key := range keysSensor {
+		var elem entities.MeasureMemKey
+		json.Unmarshal([]byte(key), &elem)
+		date_time, _ := format_date(elem.Date[:len(elem.Date)-3])
+
+		y, m, d = date_time.Date()
+		date_time = time.Date(y, m, d, date_time.Hour(), date_time.Minute(), 0, 0, time.UTC)
+
+		if (date_time.After(start) && date_time.Before(end)) || date_time.Equal(start) {
+			res = append(res, key)
+		}
 	}
-	res = append(res, end)
 	return res
 }
 
-func GetBySensorTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
+func GetDataSensorBetweenDate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sensorType := vars["sensorType"]
 	date1 := vars["date1"]
 	date2 := vars["date2"]
-	match2, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}:[0-9]{2}$", date1)
-	match1, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}:[0-9]{2}$", date2)
+	match1, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}$", date1)
+	match2, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}$", date2)
+
 	if !match1 || !match2 {
-		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", http.StatusBadRequest)
+		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD-hh:mm", http.StatusBadRequest)
 		return
 	}
+
 	date1_time, err1 := format_date(date1)
 	if err1 != nil {
 		http.Error(w, err1.Error(), http.StatusInternalServerError)
@@ -77,14 +87,19 @@ func GetBySensorTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err2.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	if date1_time.After(date2_time) {
 		tmp := date1_time
 		date1_time = date2_time
 		date2_time = tmp
 	}
 
-	allDates := between_date(date1_time, date2_time)
-	data := persistence.SelectAllSensorTypeDateHour(sensorType, allDates)
+	allKeys := keys_between_date(date1_time, date2_time, persistence.SelectKeysByType(sensorType))
+	if len(allKeys) == 0 {
+		http.Error(w, "No data available for this measure type", http.StatusNoContent)
+		return
+	}
+	data := persistence.GetForKeys(allKeys)
 	if len(data) == 0 {
 		http.Error(w, "No data available for this measure type", http.StatusNoContent)
 		return
@@ -98,55 +113,56 @@ func GetBySensorTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(jsonData)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		return
 	}
 }
 
-func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
+func GetAverageOfAllMeasureByADay(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	airport, exist := vars["airportId"]
+
+	airportIATA, exist := vars["airportIATA"]
 	if exist {
-		match, _ := regexp.MatchString("^[A-Z]{3}$", airport)
+		match, _ := regexp.MatchString("^[A-Z]{3}$", airportIATA)
 		if !match {
-			http.Error(w, "Bad Request, the airport IATA code is invalid", http.StatusBadRequest)
+			http.Error(w, "Bad Request, the airport IATA code is invalid", 400)
 			return
 		}
 	} else {
-		airport = "*"
+		airportIATA = "*"
 	}
 
 	date := vars["date"]
 	match, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", date)
 	if !match {
-		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", http.StatusBadRequest)
+		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", 401)
 		return
 	}
 	_, err := time.Parse("2006-01-02", date)
 	if err != nil {
-		http.Error(w, "Bad Request, the day isn't exist", http.StatusBadRequest)
+		http.Error(w, "Bad Request, the day isn't exist", 402)
 		return
 	}
 
-	allMeasures := persistence.SelectAllDataForADay(airport, date)
+	allMeasures := persistence.SelectAllDataForADay(airportIATA, date)
 	if len(allMeasures) == 0 {
 		http.Error(w, "No data available for this day", http.StatusNoContent)
 		return
 	}
 
-	sensorAve := entities.SensorAvg{}
+	measuresAve := entities.MeasureAvg{}
 	for measureNature, measures := range allMeasures {
 		average := GetAverage(measures)
 		if measureNature == "wind" {
-			sensorAve.WindAverage = average
+			measuresAve.WindAverage = average
 		} else if measureNature == "pressure" {
-			sensorAve.PressureAverage = average
+			measuresAve.PressureAverage = average
 		} else {
-			sensorAve.TemperatureAverage = average
+			measuresAve.TemperatureAverage = average
 		}
 	}
 
-	jsonData, err := json.Marshal(sensorAve)
+	jsonData, err := json.Marshal(measuresAve)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -160,10 +176,10 @@ func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetAverage(objects []entities.Sensor) float32 {
+func GetAverage(measures []entities.MeasureValue) float32 {
 	var sum float32 = 0.0
-	for _, object := range objects {
-		sum += object.Value
+	for _, measure := range measures {
+		sum += measure.Value
 	}
-	return sum / float32(len(objects))
+	return sum / float32(len(measures))
 }

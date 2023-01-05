@@ -14,8 +14,8 @@ func main() {
 }
 
 func pub() {
-	var idCapteur = config.GetWindSensorId()
-	var airportId = config.GetAirportId()
+	var sensorId = config.GetWindSensorId()
+	var airportIATA = config.GetAirportIATA()
 
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
@@ -24,7 +24,7 @@ func pub() {
 
 	for {
 		wind = calculateNewWind(wind, 1.00) //strconv.Itoa(randomIndex)
-		dataToSend := format.DataToSend(idCapteur, airportId, "wind", float32(wind))
+		dataToSend := format.DataToSend(sensorId, airportIATA, "wind", float32(wind))
 		client.Publish("wind", config.GetqOs(), false, dataToSend).Wait()
 		time.Sleep(10 * time.Second)
 	}

@@ -15,7 +15,7 @@ import (
 )
 
 type Measurement struct {
-	AirportID     string    `json:"airport_id"`
+	AirportIATA   string    `json:"airport_iata"`
 	Date          time.Time `json:"date"`
 	MeasureNature string    `json:"measure_nature"`
 	SensorID      int       `json:"sensor_id"`
@@ -25,18 +25,12 @@ type Measurement struct {
 var csvFile *os.File
 
 func main() {
-	subCSV()
-}
-
-func subCSV() {
-	client := server.Connect(config.GetFullURL(), "subscriberCSV")
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	client.Subscribe("temperature", 0, addToCSVFile)
-	client.Subscribe("wind", 0, addToCSVFile)
-	client.Subscribe("pressure", 0, addToCSVFile)
-	wg.Wait()
-}
+	// Parse JSON object
+	var m Measurement
+	err := json.Unmarshal([]byte(`{"airport_iata":"NTS","date":"2023-01-04-13:46:53","measure_nature":"temperature","sensor_id":5,"value":3}`), &m)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 func addToCSVFile(_ mqtt.Client, message mqtt.Message) {
 
@@ -45,13 +39,14 @@ func addToCSVFile(_ mqtt.Client, message mqtt.Message) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer csvFile.Close()
-	
-	// print the message.payload
-	fmt.Println(string(message.Payload()["airport_id"]))
-	// Create a new CSV writer
-	csvWriter := csv.NewWriter(csvFile)
-	err = csvWriter.Write(string{message.Payload().airport_id, data["date"], data["measure_nature"], data["sensor_id"]})
+	defer file.Close()
+
+	// Create CSV writer
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Write measurement to CSV
+	err = writer.Write([]string{m.AirportIATA, m.Date.Format("2006-01-02 15:04:05"), m.MeasureNature, fmt.Sprintf("%d", m.SensorID), fmt.Sprintf("%d", m.Value)})
 	if err != nil {
 		log.Println(err)
 	}

@@ -17,7 +17,7 @@ type config struct {
 		WindSensorId        int    `yaml:"wind-sensor-id"`
 		TemperatureSensorId int    `yaml:"temperature-sensor-id"`
 		PressureSensorId    int    `yaml:"pressure-sensor-id"`
-		AirportId           string `yaml:"airport-id"`
+		AirportIATA         string `yaml:"airport-iata"`
 	} `yaml:"info"`
 }
 
@@ -73,6 +73,6 @@ func GetPressureSensorId() int {
 	return c.getConfig().Info.PressureSensorId
 }
 
-func GetAirportId() string {
-	return c.getConfig().Info.AirportId
+func GetAirportIATA() string {
+	return c.getConfig().Info.AirportIATA
 }
