@@ -6,54 +6,68 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
+
+	"foo.org/myapp/internal/config"
+	"foo.org/myapp/internal/server"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 type Measurement struct {
-	AirportID    string    `json:"airport_id"`
-	Date         time.Time `json:"date"`
+	AirportID     string    `json:"airport_id"`
+	Date          time.Time `json:"date"`
 	MeasureNature string    `json:"measure_nature"`
-	SensorID     int       `json:"sensor_id"`
-	Value        int       `json:"value"`
+	SensorID      int       `json:"sensor_id"`
+	Value         int       `json:"value"`
 }
 
+var csvFile *os.File
+
 func main() {
-	// Parse JSON object
-	var m Measurement
-	err := json.Unmarshal([]byte(`{"airport_id":"NTS","date":"2023-01-04-13:46:53","measure_nature":"temperature","sensor_id":5,"value":3}`), &m)
+	subCSV()
+}
+
+func subCSV() {
+	client := server.Connect(config.GetFullURL(), "subscriberCSV")
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	client.Subscribe("temperature", 0, addToCSVFile)
+	client.Subscribe("wind", 0, addToCSVFile)
+	client.Subscribe("pressure", 0, addToCSVFile)
+	wg.Wait()
+}
+
+func addToCSVFile(_ mqtt.Client, message mqtt.Message) {
+
+	now := time.Now()
+	csvFile, err := os.Create(now.Format("2006-01-02-15:04:05") + ".csv")
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// Create CSV file
-	filename := fmt.Sprintf("measurements_%s.csv", m.Date.Format("2006-01-02"))
-	file, err := os.Create(filename)
+	defer csvFile.Close()
+	
+	// print the message.payload
+	fmt.Println(string(message.Payload()["airport_id"]))
+	// Create a new CSV writer
+	csvWriter := csv.NewWriter(csvFile)
+	err = csvWriter.Write(string{message.Payload().airport_id, data["date"], data["measure_nature"], data["sensor_id"]})
 	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	// Create CSV writer
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	// Write measurement to CSV
-	err = writer.Write([]string{m.AirportID, m.Date.Format("2006-01-02 15:04:05"), m.MeasureNature, fmt.Sprintf("%d", m.SensorID), fmt.Sprintf("%d", m.Value)})
-	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
-	// Save CSV file every 24 hours
-	ticker := time.NewTicker(24 * time.Hour)
-	defer ticker.Stop()
+	defer csvWriter.Flush()
+	// Save the file every 24 hours
 	for {
-		<-ticker.C
-		writer.Flush()
-		file.Close()
-		file, err = os.Create(filename)
+		time.Sleep(60 * time.Second)
+
+		// Close the current file and create a new one with the updated date
+		csvFile.Close()
+		now = time.Now()
+		csvFile, err = os.Create(now.Format("2006-01-02-15:04:05") + ".csv")
 		if err != nil {
 			log.Fatal(err)
 		}
-		writer = csv.NewWriter(file)
+		csvWriter = csv.NewWriter(csvFile)
 	}
 }
