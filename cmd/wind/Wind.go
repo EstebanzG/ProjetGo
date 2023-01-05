@@ -34,10 +34,10 @@ func generate(oldWind float32) float32 {
 	if oldWind == -1.0 {
 		rand.Seed(time.Now().UnixNano())
 		// Between 10 and 25
-		return float32(10 + rand.Intn(15))
+		return float32(10 + rand.Intn(16))
 	}
 	// Between -1 and +1
-	delta := float32(-1 + rand.Intn(2))
+	delta := float32(-1 + rand.Intn(3))
 	if oldWind+delta < 5 || oldWind+delta > 130 {
 		return oldWind
 	}
