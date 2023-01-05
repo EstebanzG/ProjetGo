@@ -1,5 +1,15 @@
 window.addEventListener("DOMContentLoaded", (event) => {
   // WINDOWS APEX
+  async function getData() {
+    const response = await fetch("http://localhost:8080/data/temperature");
+    const data = await response.json();
+    return data;
+  }
+
+  getData().then((data) => {
+    optionsTemp.series.push(data[0].value);
+    console.log(data);
+  });
 
   window.Apex = {
     chart: {
@@ -97,14 +107,12 @@ window.addEventListener("DOMContentLoaded", (event) => {
   }
 
   // TEMPERATURE
-
   var optionsTemp = {
     chart: {
       height: 250,
       type: "radialBar",
     },
-
-    series: [27],
+    series: [],
     colors: ["sandybrown"],
     plotOptions: {
       radialBar: {
@@ -136,8 +144,8 @@ window.addEventListener("DOMContentLoaded", (event) => {
             color: "#fff",
             fontSize: "30px",
             show: true,
-            formatter: function (val) {
-              return val + "°C";
+            formatter: function (value) {
+              return value + "°C";
             },
           },
         },
@@ -157,7 +165,14 @@ window.addEventListener("DOMContentLoaded", (event) => {
     },
     labels: ["Temperature"],
   };
-
+  fetch("http://localhost:8080/data/temperature")
+    .then((response) => response.json())
+    .then((data) => {
+      optionsTemp.series.push(data[0].value);
+      console.log(optionsTemp.series);
+    })
+    .catch((error) => console.error(error));
+  console.log("Array " + optionsTemp.series[0]);
   var chartTemp = new ApexCharts(
     document.querySelector("#chartTemp"),
     optionsTemp
@@ -916,24 +931,4 @@ window.addEventListener("DOMContentLoaded", (event) => {
       },
     });
   }, 3000);
-
-  /* When the user clicks on the button, 
-toggle between hiding and showing the dropdown content */
-  function myFunction() {
-    document.getElementById("myDropdown").classList.toggle("show");
-  }
-
-  // Close the dropdown menu if the user clicks outside of it
-  window.onclick = function (event) {
-    if (!event.target.matches(".dropbtn")) {
-      var dropdowns = document.getElementsByClassName("dropdown-content");
-      var i;
-      for (i = 0; i < dropdowns.length; i++) {
-        var openDropdown = dropdowns[i];
-        if (openDropdown.classList.contains("show")) {
-          openDropdown.classList.remove("show");
-        }
-      }
-    }
-  };
 });
