@@ -8,7 +8,7 @@ import (
 )
 
 func DataToSend(sensorId int, airportID string, measureNature string, value float32) []byte {
-	object := entities.Sensor{
+	object := entities.SensorValue{
 		AirportID:     airportID,
 		Date:          time.Now().Format("2006-01-02-15:04:05"),
 		MeasureNature: measureNature,

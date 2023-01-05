@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func SelectByType(sensorType string) []entities.Sensor {
+func SelectByType(sensorType string) []entities.SensorValue {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
 	keysFormat := format.DataKeyToStore("*", "*", sensorType, "*")
@@ -23,10 +23,10 @@ func SelectByType(sensorType string) []entities.Sensor {
 	return GetForKeys(keys)
 }
 
-func SelectAllSensorTypeDateHour(sensorType string, allDates []time.Time) []entities.Sensor {
+func SelectAllSensorTypeDateHour(sensorType string, allDates []time.Time) []entities.SensorValue {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
-	var res []entities.Sensor
+	var res []entities.SensorValue
 
 	for _, d := range allDates {
 		//delete minutes and seconds
@@ -45,11 +45,11 @@ func SelectAllSensorTypeDateHour(sensorType string, allDates []time.Time) []enti
 	return res
 }
 
-func SelectAllDataForADay(airport string, date string) map[string][]entities.Sensor {
+func SelectAllDataForADay(airport string, date string) map[string][]entities.SensorValue {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
 	measuresNatures := []string{"wind", "temperature", "pressure"}
-	allMeasures := make(map[string][]entities.Sensor)
+	allMeasures := make(map[string][]entities.SensorValue)
 
 	for _, measureNature := range measuresNatures {
 		keyFormat := format.DataKeyToStore(airport, date+"*", measureNature, "*")
@@ -64,10 +64,10 @@ func SelectAllDataForADay(airport string, date string) map[string][]entities.Sen
 	return allMeasures
 }
 
-func GetForKeys(keys []string) []entities.Sensor {
+func GetForKeys(keys []string) []entities.SensorValue {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
-	var objects []entities.Sensor
+	var objects []entities.SensorValue
 	for _, key := range keys {
 		value, _ := redis.Bytes(conn.Do("GET", key))
 		objectMem := entities.SensorMem{}
@@ -85,7 +85,7 @@ func GetForKeys(keys []string) []entities.Sensor {
 
 		sensorId, _ := strconv.Atoi(objectMemKey.SensorId)
 
-		object := entities.Sensor{
+		object := entities.SensorValue{
 			AirportID:     objectMemKey.AirportID,
 			Date:          objectMemKey.Date,
 			MeasureNature: objectMemKey.MeasureNature,

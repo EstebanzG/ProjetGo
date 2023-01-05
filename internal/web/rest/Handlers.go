@@ -109,7 +109,7 @@ func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
 	if exist {
 		match, _ := regexp.MatchString("^[A-Z]{3}$", airport)
 		if !match {
-			http.Error(w, "Bad Request, the airport IATA code is invalid", http.StatusBadRequest)
+			http.Error(w, "Bad Request, the airport IATA code is invalid", 400)
 			return
 		}
 	} else {
@@ -119,12 +119,12 @@ func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
 	date := vars["date"]
 	match, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", date)
 	if !match {
-		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", http.StatusBadRequest)
+		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", 401)
 		return
 	}
 	_, err := time.Parse("2006-01-02", date)
 	if err != nil {
-		http.Error(w, "Bad Request, the day isn't exist", http.StatusBadRequest)
+		http.Error(w, "Bad Request, the day isn't exist", 402)
 		return
 	}
 
@@ -160,7 +160,7 @@ func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetAverage(objects []entities.Sensor) float32 {
+func GetAverage(objects []entities.SensorValue) float32 {
 	var sum float32 = 0.0
 	for _, object := range objects {
 		sum += object.Value

@@ -29,7 +29,7 @@ func sub() {
 }
 
 func addToDatabase(_ mqtt.Client, message mqtt.Message) {
-	objet := entities.Sensor{}
+	objet := entities.SensorValue{}
 	err := json.Unmarshal(message.Payload(), &objet)
 	if err != nil {
 		return

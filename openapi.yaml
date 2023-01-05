@@ -1,0 +1,125 @@
+---
+openapi: 3.0.0
+servers: 
+  - url: "http://localhost:8080/"
+
+info:
+  description: This is the API of the airport data
+  version: "1.0.0"
+  title: Airport API
+tags:
+  - name: developers
+    description: Operations available to everybody
+
+paths:
+  /average/{date}:
+    get:
+      tags:
+        - developers
+      summary: get the average of all data on a specific day
+      parameters:
+        - name: date
+          in: path
+          required: true
+          description: The date of the day for which you want the average data, with the following format YYYY-MM-DD
+          schema:
+            type : string
+            minimum: 10
+            maximum: 10
+      responses:
+        '401':
+          description: Bad Request, the date must respect the format YYYY-MM-DD
+        '402':
+          description: Bad Request, the day isn't exist
+        '204':
+          description: No data available for this day
+        '200':
+          description: The average of all data on a specific day
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorAvg'
+          
+  
+  /average/{airportId}/{date}:
+    get:
+      tags:
+        - developers
+      summary: get the average of all data in specific airport on a specific day
+      parameters:
+        - name: date
+          in: path
+          required: true
+          description: The date of the day for which you want the average data, with the following format YYYY-MM-DD
+          schema:
+            type : string
+            minimum: 10
+            maximum: 10
+        - name: airportId
+          in: path
+          required: true
+          description: The IATA code (3 characters) of the airport whose data you want to retrieve 
+          schema:
+            type : string
+            minimum: 3
+            maximum: 3
+      responses:
+        '400':
+          description: Bad Request, the airport IATA code must be 3 characters long
+        '401':
+          description: Bad Request, the date must respect the format YYYY-MM-DD
+        '402':
+          description: Bad Request, the airport IATA code is invalid
+        '204':
+          description: No content available
+        '200':
+          description: The average of all data on a specific day
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorAvg'
+            
+
+components:
+  schemas:
+    SensorValue:
+      type: object
+      required:
+        - airport_id
+        - date
+        - measure_nature
+        - sensor_id
+        - value
+      properties:
+        airport_id:
+          type: string
+          example: NTS
+        date:
+          type: string
+          example: 2023-01-05
+        measure_nature:
+          type: string
+          example: wind 
+        sensor_id:
+          type: string
+          example: 5
+        value:
+          type: number
+          example: 15.092
+        
+    SensorAvg:
+      type: object
+      required:
+        - wind_average
+        - temperature_average
+        - pressure_average
+      properties:
+        wind_average:
+          type: number
+          example: 15.092
+        temperature_average:
+          type: number
+          example: 17.804
+        pressure_average:
+          type: number
+          example: 1034.644

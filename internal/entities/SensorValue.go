@@ -1,6 +1,6 @@
 package entities
 
-type Sensor struct {
+type SensorValue struct {
 	AirportID     string  `json:"airport_id"`
 	Date          string  `json:"date"`
 	MeasureNature string  `json:"measure_nature"`
