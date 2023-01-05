@@ -23,7 +23,7 @@ func pub() {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r1 := rand.New(s1)
 		press := r1.Intn(35)
-		dataToSend := format.FormatDataToSend(idCapteur, airportId, "pressure", float32(press))
+		dataToSend := format.DataToSend(idCapteur, airportId, "pressure", float32(press))
 		client.Publish("pressure", 0, false, dataToSend).Wait()
 		time.Sleep(10 * time.Second)
 	}

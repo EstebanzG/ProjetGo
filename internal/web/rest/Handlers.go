@@ -2,11 +2,11 @@ package rest
 
 import (
 	"encoding/json"
-	"fmt"
 	"foo.org/myapp/internal/entities"
 	"foo.org/myapp/internal/persistence"
 	"github.com/gorilla/mux"
 	"net/http"
+	"regexp"
 )
 
 func GetAllSensor(w http.ResponseWriter, r *http.Request) {
@@ -14,8 +14,11 @@ func GetAllSensor(w http.ResponseWriter, r *http.Request) {
 	sensorType := vars["sensorType"]
 
 	data := persistence.SelectDataSensorFromTo(sensorType)
-	fmt.Println(sensorType)
-	fmt.Println(data)
+
+	if len(data) == 0 {
+		http.Error(w, "No data available for this measure type", http.StatusNoContent)
+		return
+	}
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -27,24 +30,38 @@ func GetAllSensor(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
-	winds, temperatures, pressures := persistence.SelectAllDataForADay()
-	windMoyenne := GetAverage(winds)
-	temperatureMoyenne := GetAverage(temperatures)
-	pressureMoyenne := GetAverage(pressures)
-	fmt.Println(windMoyenne)
-	fmt.Println(temperatureMoyenne)
-	fmt.Println(pressureMoyenne)
-
-	sensorMoy := entities.SensorAvg{
-		WindAverage:        windMoyenne,
-		TemperatureAverage: temperatureMoyenne,
-		PressureAverage:    pressureMoyenne,
+	vars := mux.Vars(r)
+	date := vars["date"]
+	match, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", date)
+	if !match {
+		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", http.StatusBadRequest)
+		return
 	}
-	jsonData, err := json.Marshal(sensorMoy)
+
+	allMeasures := persistence.SelectAllDataForADay(date)
+	if len(allMeasures) == 0 {
+		http.Error(w, "No data available for this day", http.StatusNoContent)
+		return
+	}
+
+	sensorAve := entities.SensorAvg{}
+	for measureNature, measures := range allMeasures {
+		average := GetAverage(measures)
+		if measureNature == "wind" {
+			sensorAve.WindAverage = average
+		} else if measureNature == "pressure" {
+			sensorAve.PressureAverage = average
+		} else {
+			sensorAve.TemperatureAverage = average
+		}
+	}
+
+	jsonData, err := json.Marshal(sensorAve)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
 }
