@@ -10,6 +10,7 @@ import (
 	"foo.org/myapp/internal/server"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
+	"strconv"
 	"sync"
 )
 
@@ -27,22 +28,21 @@ func sub() {
 	wg.Wait()
 }
 
-func addToDatabase(client mqtt.Client, message mqtt.Message) {
+func addToDatabase(_ mqtt.Client, message mqtt.Message) {
 	objet := entities.Sensor{}
 	err := json.Unmarshal(message.Payload(), &objet)
 	if err != nil {
 		return
 	}
-	//TODO: la conversion en string n'est pas forcement bonne
-	cle := format.DataKeyToStore(objet.AirportID, objet.Date, objet.MeasureNature, string(objet.SensorId))
+
+	key := format.DataKeyToStore(objet.AirportID, objet.Date, objet.MeasureNature, strconv.Itoa(objet.SensorId))
 	value := format.DataToStore(objet.Value)
-	fmt.Println(string(cle))
+	fmt.Println(string(key))
 
 	conn := database.GetConnexion()
-	_, err = conn.Do("SET", cle, value)
+	defer database.Close(conn)
+	_, err = conn.Do("SET", key, value)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	conn.Close()
 }

@@ -24,7 +24,7 @@ func pub() {
 		r1 := rand.New(s1)
 		press := r1.Intn(35)
 		dataToSend := format.DataToSend(idCapteur, airportId, "pressure", float32(press))
-		client.Publish("pressure", 0, false, dataToSend).Wait()
+		client.Publish("pressure", config.GetqOs(), false, dataToSend).Wait()
 		time.Sleep(10 * time.Second)
 	}
 }

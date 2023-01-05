@@ -25,7 +25,7 @@ func pub() {
 	for {
 		wind = calculateNewWind(wind, 1.00) //strconv.Itoa(randomIndex)
 		dataToSend := format.DataToSend(idCapteur, airportId, "wind", float32(wind))
-		client.Publish("wind", 0, false, dataToSend).Wait()
+		client.Publish("wind", config.GetqOs(), false, dataToSend).Wait()
 		time.Sleep(10 * time.Second)
 	}
 }

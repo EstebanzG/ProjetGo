@@ -11,6 +11,7 @@ type config struct {
 		Port     string
 		Url      string `yaml:"url"`
 		Protocol string `yaml:"protocol"`
+		qOs      byte   `yaml:"qos"`
 	} `yaml:"http"`
 	Info struct {
 		WindSensorId        int    `yaml:"wind-sensor-id"`
@@ -54,6 +55,10 @@ func getProtocol() string {
 func GetFullURL() string {
 	fullURL := getProtocol() + "://" + getURL() + ":" + getPort()
 	return fullURL
+}
+
+func GetqOs() byte {
+	return c.getConfig().HTTP.qOs
 }
 
 func GetWindSensorId() int {

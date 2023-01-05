@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
 	"foo.org/myapp/internal/entities"
 	"foo.org/myapp/internal/persistence"
 	"github.com/gorilla/mux"
@@ -23,7 +24,11 @@ func GetBySensorType(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonData)
+	_, err = w.Write(jsonData)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
 
 func format_date(date string) (time.Time, error) {
@@ -91,19 +96,39 @@ func GetBySensorTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonData)
+	_, err = w.Write(jsonData)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
 
 func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	airport, exist := vars["airportId"]
+	if exist {
+		match, _ := regexp.MatchString("^[A-Z]{3}$", airport)
+		if !match {
+			http.Error(w, "Bad Request, the airport IATA code is invalid", http.StatusBadRequest)
+			return
+		}
+	} else {
+		airport = "*"
+	}
+
 	date := vars["date"]
 	match, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", date)
 	if !match {
 		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", http.StatusBadRequest)
 		return
 	}
+	_, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		http.Error(w, "Bad Request, the day isn't exist", http.StatusBadRequest)
+		return
+	}
 
-	allMeasures := persistence.SelectAllDataForADay(date)
+	allMeasures := persistence.SelectAllDataForADay(airport, date)
 	if len(allMeasures) == 0 {
 		http.Error(w, "No data available for this day", http.StatusNoContent)
 		return
@@ -128,7 +153,11 @@ func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonData)
+	_, err = w.Write(jsonData)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
 
 func GetAverage(objects []entities.Sensor) float32 {

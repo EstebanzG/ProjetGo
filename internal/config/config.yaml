@@ -2,6 +2,7 @@ http:
   port: "1883"
   protocol: "tcp"
   url: "localhost"
+  qos: 0
 
 info:
   wind-sensor-id: 5
