@@ -6,6 +6,7 @@ import (
 	"foo.org/myapp/internal/entities"
 	"foo.org/myapp/internal/persistence"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -26,7 +27,7 @@ func GetBySensorType(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(jsonData)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		return
 	}
 }
@@ -98,22 +99,23 @@ func GetBySensorTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(jsonData)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		return
 	}
 }
 
-func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
+func GetAverageOfAllMeasureByADay(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	airport, exist := vars["airportId"]
+
+	airportIATA, exist := vars["airportIATA"]
 	if exist {
-		match, _ := regexp.MatchString("^[A-Z]{3}$", airport)
+		match, _ := regexp.MatchString("^[A-Z]{3}$", airportIATA)
 		if !match {
 			http.Error(w, "Bad Request, the airport IATA code is invalid", 400)
 			return
 		}
 	} else {
-		airport = "*"
+		airportIATA = "*"
 	}
 
 	date := vars["date"]
@@ -128,25 +130,25 @@ func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	allMeasures := persistence.SelectAllDataForADay(airport, date)
+	allMeasures := persistence.SelectAllDataForADay(airportIATA, date)
 	if len(allMeasures) == 0 {
 		http.Error(w, "No data available for this day", http.StatusNoContent)
 		return
 	}
 
-	sensorAve := entities.SensorAvg{}
+	measuresAve := entities.MeasureAvg{}
 	for measureNature, measures := range allMeasures {
 		average := GetAverage(measures)
 		if measureNature == "wind" {
-			sensorAve.WindAverage = average
+			measuresAve.WindAverage = average
 		} else if measureNature == "pressure" {
-			sensorAve.PressureAverage = average
+			measuresAve.PressureAverage = average
 		} else {
-			sensorAve.TemperatureAverage = average
+			measuresAve.TemperatureAverage = average
 		}
 	}
 
-	jsonData, err := json.Marshal(sensorAve)
+	jsonData, err := json.Marshal(measuresAve)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -160,10 +162,10 @@ func GetMoyenneAllDataForADay(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetAverage(objects []entities.SensorValue) float32 {
+func GetAverage(measures []entities.MeasureValue) float32 {
 	var sum float32 = 0.0
-	for _, object := range objects {
-		sum += object.Value
+	for _, measure := range measures {
+		sum += measure.Value
 	}
-	return sum / float32(len(objects))
+	return sum / float32(len(measures))
 }

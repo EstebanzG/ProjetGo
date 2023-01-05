@@ -14,8 +14,8 @@ func main() {
 }
 
 func pub() {
-	var idCapteur = config.GetPressureSensorId()
-	var airportId = config.GetAirportId()
+	var sensorId = config.GetPressureSensorId()
+	var airportIATA = config.GetAirportIATA()
 
 	client := server.Connect(config.GetFullURL(), "pressure")
 
@@ -23,7 +23,7 @@ func pub() {
 		s1 := rand.NewSource(time.Now().UnixNano())
 		r1 := rand.New(s1)
 		press := r1.Intn(35)
-		dataToSend := format.DataToSend(idCapteur, airportId, "pressure", float32(press))
+		dataToSend := format.DataToSend(sensorId, airportIATA, "pressure", float32(press))
 		client.Publish("pressure", config.GetqOs(), false, dataToSend).Wait()
 		time.Sleep(10 * time.Second)
 	}

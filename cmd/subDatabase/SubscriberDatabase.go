@@ -29,18 +29,19 @@ func sub() {
 }
 
 func addToDatabase(_ mqtt.Client, message mqtt.Message) {
-	objet := entities.SensorValue{}
-	err := json.Unmarshal(message.Payload(), &objet)
+	measureValue := entities.MeasureValue{}
+	err := json.Unmarshal(message.Payload(), &measureValue)
 	if err != nil {
 		return
 	}
 
-	key := format.DataKeyToStore(objet.AirportID, objet.Date, objet.MeasureNature, strconv.Itoa(objet.SensorId))
-	value := format.DataToStore(objet.Value)
+	key := format.DataKeyToStore(measureValue.AirportIATA, measureValue.Date, measureValue.MeasureNature, strconv.Itoa(measureValue.SensorId))
+	value := format.DataToStore(measureValue.Value)
 	fmt.Println(string(key))
 
 	conn := database.GetConnexion()
 	defer database.Close(conn)
+
 	_, err = conn.Do("SET", key, value)
 	if err != nil {
 		log.Fatal(err)

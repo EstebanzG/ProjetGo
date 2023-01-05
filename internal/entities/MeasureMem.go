@@ -1,5 +1,5 @@
 package entities
 
-type SensorMem struct {
+type MeasureMem struct {
 	Value float32 `json:"value"`
 }

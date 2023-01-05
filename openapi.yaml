@@ -38,10 +38,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SensorAvg'
+                $ref: '#/components/schemas/MeasureAvg'
           
   
-  /average/{airportId}/{date}:
+  /average/{airportIATA}/{date}:
     get:
       tags:
         - developers
@@ -55,7 +55,7 @@ paths:
             type : string
             minimum: 10
             maximum: 10
-        - name: airportId
+        - name: airportIATA
           in: path
           required: true
           description: The IATA code (3 characters) of the airport whose data you want to retrieve 
@@ -77,12 +77,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SensorAvg'
+                $ref: '#/components/schemas/MeasureAvg'
             
 
 components:
   schemas:
-    SensorValue:
+    MeasureValue:
       type: object
       required:
         - airport_id
@@ -107,7 +107,7 @@ components:
           type: number
           example: 15.092
         
-    SensorAvg:
+    MeasureAvg:
       type: object
       required:
         - wind_average
