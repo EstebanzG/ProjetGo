@@ -11,12 +11,13 @@ type config struct {
 		Port     string
 		Url      string `yaml:"url"`
 		Protocol string `yaml:"protocol"`
+		qOs      byte   `yaml:"qos"`
 	} `yaml:"http"`
 	Info struct {
 		WindSensorId        int    `yaml:"wind-sensor-id"`
 		TemperatureSensorId int    `yaml:"temperature-sensor-id"`
 		PressureSensorId    int    `yaml:"pressure-sensor-id"`
-		AirportId           string `yaml:"airport-id"`
+		AirportIATA         string `yaml:"airport-iata"`
 	} `yaml:"info"`
 }
 
@@ -56,6 +57,10 @@ func GetFullURL() string {
 	return fullURL
 }
 
+func GetqOs() byte {
+	return c.getConfig().HTTP.qOs
+}
+
 func GetWindSensorId() int {
 	return c.getConfig().Info.WindSensorId
 }
@@ -68,6 +73,6 @@ func GetPressureSensorId() int {
 	return c.getConfig().Info.PressureSensorId
 }
 
-func GetAirportId() string {
-	return c.getConfig().Info.AirportId
+func GetAirportIATA() string {
+	return c.getConfig().Info.AirportIATA
 }

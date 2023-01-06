@@ -2,11 +2,12 @@ http:
   port: "1883"
   protocol: "tcp"
   url: "localhost"
+  qos: 0
 
 info:
   wind-sensor-id: 5
   temperature-sensor-id: 5
   pressure-sensor-id: 5
-  airport-id: "NTS"
+  airport-iata: "NTS"
 
 
