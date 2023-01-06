@@ -10,11 +10,11 @@ import (
 	"strconv"
 )
 
-func SelectKeys(airportIATA string, sensorType string) []string {
+func SelectKeys(airportIATA string, measureType string) []string {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
 
-	keyFormat := format.DataKeyToStore(airportIATA, "*", sensorType, "*")
+	keyFormat := format.DataKeyToStore(airportIATA, "*", measureType, "*")
 	keys, err := redis.Strings(conn.Do("KEYS", keyFormat))
 	if err != nil {
 		log.Fatal(err)
@@ -22,24 +22,16 @@ func SelectKeys(airportIATA string, sensorType string) []string {
 	return keys
 }
 
-func SelectAllDataForADay(airportIATA string, date string) map[string][]entities.MeasureValue {
+func SelectKeysByDate(airportIATA string, measureType string, date string) []string {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
 
-	measuresNatures := []string{"wind", "temperature", "pressure"}
-	allMeasures := make(map[string][]entities.MeasureValue)
-
-	for _, measureNature := range measuresNatures {
-		keyFormat := format.DataKeyToStore(airportIATA, date+"*", measureNature, "*")
-		keys, err := redis.Strings(conn.Do("KEYS", keyFormat))
-		if err != nil {
-			log.Fatal(err)
-		}
-		if len(keys) != 0 {
-			allMeasures[measureNature] = GetForKeys(keys)
-		}
+	keyFormat := format.DataKeyToStore(airportIATA, date+"-*", measureType, "*")
+	keys, err := redis.Strings(conn.Do("KEYS", keyFormat))
+	if err != nil {
+		log.Fatal(err)
 	}
-	return allMeasures
+	return keys
 }
 
 func GetForKeys(keys []string) []entities.MeasureValue {
