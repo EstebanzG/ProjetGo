@@ -10,22 +10,11 @@ import (
 	"strconv"
 )
 
-func SelectByType(sensorType string) []entities.MeasureValue {
-	conn := database.GetConnexion()
-	defer database.Close(conn)
-	keysFormat := format.DataKeyToStore("*", "*", sensorType, "*")
-	keys, err := redis.Strings(conn.Do("KEYS", keysFormat))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return GetForKeys(keys)
-}
-
-func SelectKeysByType(sensorType string) []string {
+func SelectKeys(airportIATA string, sensorType string) []string {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
 
-	keyFormat := format.DataKeyToStore("*", "*", sensorType, "*")
+	keyFormat := format.DataKeyToStore(airportIATA, "*", sensorType, "*")
 	keys, err := redis.Strings(conn.Do("KEYS", keyFormat))
 	if err != nil {
 		log.Fatal(err)
