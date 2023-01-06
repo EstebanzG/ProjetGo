@@ -51,6 +51,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
 
   var trigoStrength = 3;
   var iteration = 11;
+  var heure = 17;
 
   // RANDOM FUNCTIONS
 
@@ -96,9 +97,15 @@ window.addEventListener("DOMContentLoaded", (event) => {
     };
   }
 
-  fetch("http://localhost:8080/data/temperature")
-    .then((response) => response.json())
+  fetch(
+    "http://localhost:8080/data/temperature/2023-01-06-14:00/2023-01-06-15:00"
+  )
+    .then((response) => {
+      response.json();
+      console.log(response);
+    })
     .then((data) => {
+      console.log(data);
       const valueT = Math.round(data[0].value * 10) / 10;
       // TEMPERATURE
       var optionsTemp = {
@@ -166,15 +173,13 @@ window.addEventListener("DOMContentLoaded", (event) => {
       chartTemp.render();
     })
     .catch((error) => {
-      console.log("DATE INVALIDE -> " + error);
+      console.log("ERROR -> " + error);
     });
 
   fetch("http://localhost:8080/data/pressure")
     .then((response) => response.json())
     .then((data) => {
-      console.log(data[0]);
       const valueP = Math.round(data[0].value / 15);
-      console.log(valueP);
       // PRESSURE
       var optionsPre = {
         chart: {
