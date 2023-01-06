@@ -5,24 +5,22 @@ import (
 	"net/http"
 
 	"foo.org/myapp/internal/web/rest"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 func main() {
-    router := mux.NewRouter()
-    //TODO : passer la date en paramètre
-    router.HandleFunc("/data/{sensorType}", rest.GetBySensorType)
-    router.HandleFunc("/data/{sensorType}/{date1}/{date2}", rest.GetDataSensorBetweenDate)
-    router.HandleFunc("/average/{airportIATA}/{date}", rest.GetAverageOfAllMeasureByADay)
-    router.HandleFunc("/average/{date}", rest.GetAverageOfAllMeasureByADay)
+	router := mux.NewRouter()
+	router.HandleFunc("/data/{sensorType}", rest.GetByType)
+	router.HandleFunc("/data/{sensorType}/{date1}/{date2}", rest.GetByTypeBetweenDate)
+	router.HandleFunc("/average/{date}", rest.GetAverageByDay)
 
-    headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
-    methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
-    origins := handlers.AllowedOrigins([]string{"*"})
-    err := http.ListenAndServe(":8080", handlers.CORS(headers, methods, origins)(router))
-    if err != nil {
-        log.Fatal(err)
-        return
-    }
+	router.HandleFunc("/data/{airportIATA}/{sensorType}", rest.GetByType)
+	router.HandleFunc("/data/{airportIATA}/{sensorType}/{date1}/{date2}", rest.GetByTypeBetweenDate)
+	router.HandleFunc("/average/{airportIATA}/{date}", rest.GetAverageByDay)
+
+	err := http.ListenAndServe(":8080", router)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 }
