@@ -96,17 +96,17 @@ window.addEventListener("DOMContentLoaded", (event) => {
     };
   }
 
-  fetch("http://localhost:8080/average/NTE/2023-01-05")
+  fetch("http://localhost:8080/data/temperature")
     .then((response) => response.json())
     .then((data) => {
-      const value = Math.round(data.temperature_average);
+      const valueT = Math.round(data[0].value * 10) / 10;
       // TEMPERATURE
       var optionsTemp = {
         chart: {
           height: 250,
           type: "radialBar",
         },
-        series: [value],
+        series: [valueT + 10],
         colors: ["sandybrown"],
         plotOptions: {
           radialBar: {
@@ -139,7 +139,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
                 fontSize: "30px",
                 show: true,
                 formatter: function (value) {
-                  return value + "°C";
+                  return value - 10 + "°C";
                 },
               },
             },
@@ -164,143 +164,160 @@ window.addEventListener("DOMContentLoaded", (event) => {
         optionsTemp
       );
       chartTemp.render();
+    })
+    .catch((error) => {
+      console.log("DATE INVALIDE -> " + error);
     });
 
-  // PRESSURE
-
-  var optionsPre = {
-    chart: {
-      height: 250,
-      type: "radialBar",
-    },
-
-    series: [35],
-    colors: ["seagreen"], // alert : indianred
-    plotOptions: {
-      radialBar: {
-        startAngle: -90,
-        endAngle: 90,
-        hollow: {
-          margin: 0,
-          size: "70%",
+  fetch("http://localhost:8080/data/pressure")
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data[0]);
+      const valueP = Math.round(data[0].value / 15);
+      console.log(valueP);
+      // PRESSURE
+      var optionsPre = {
+        chart: {
+          height: 250,
+          type: "radialBar",
         },
-        track: {
-          startAngle: -90,
-          endAngle: 90,
-          dropShadow: {
-            enabled: true,
-            top: 2,
-            left: 0,
-            blur: 4,
-            opacity: 0.15,
-          },
-        },
-        dataLabels: {
-          name: {
-            offsetY: -30,
-            color: "#fff",
-            fontSize: "13px",
-          },
-          value: {
-            offsetY: -15,
-            color: "#fff",
-            fontSize: "30px",
-            show: true,
-            formatter: function (val) {
-              return val + " P";
+
+        series: [valueP],
+        colors: ["seagreen"], // alert : indianred
+        plotOptions: {
+          radialBar: {
+            startAngle: -90,
+            endAngle: 90,
+            hollow: {
+              margin: 0,
+              size: "70%",
+            },
+            track: {
+              startAngle: -90,
+              endAngle: 90,
+              dropShadow: {
+                enabled: true,
+                top: 2,
+                left: 0,
+                blur: 4,
+                opacity: 0.15,
+              },
+            },
+            dataLabels: {
+              name: {
+                offsetY: -30,
+                color: "#fff",
+                fontSize: "13px",
+              },
+              value: {
+                offsetY: -15,
+                color: "#fff",
+                fontSize: "30px",
+                show: true,
+                formatter: function (val) {
+                  return val * 15 + " P";
+                },
+              },
             },
           },
         },
-      },
-    },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shade: "dark",
-        type: "vertical",
-        gradientToColors: ["lightgreen"],
-        stops: [0, 100],
-      },
-    },
-    stroke: {
-      lineCap: "round",
-    },
-    labels: ["Pressure"],
-  };
-
-  var chartPre = new ApexCharts(
-    document.querySelector("#chartPre"),
-    optionsPre
-  );
-  chartPre.render();
-
-  // WIND
-
-  var optionsWind = {
-    chart: {
-      height: 250,
-      type: "radialBar",
-    },
-
-    series: [60],
-    colors: ["deepskyblue"],
-    plotOptions: {
-      radialBar: {
-        startAngle: -90,
-        endAngle: 90,
-        hollow: {
-          margin: 0,
-          size: "70%",
-        },
-        track: {
-          startAngle: -90,
-          endAngle: 90,
-          dropShadow: {
-            enabled: true,
-            top: 2,
-            left: 0,
-            blur: 4,
-            opacity: 0.15,
+        fill: {
+          type: "gradient",
+          gradient: {
+            shade: "dark",
+            type: "vertical",
+            gradientToColors: ["lightgreen"],
+            stops: [0, 100],
           },
         },
-        dataLabels: {
-          name: {
-            offsetY: -30,
-            color: "#fff",
-            fontSize: "13px",
-          },
-          value: {
-            offsetY: -15,
-            color: "#fff",
-            fontSize: "30px",
-            show: true,
-            formatter: function (val) {
-              return val + " km/h";
+        stroke: {
+          lineCap: "round",
+        },
+        labels: ["Pressure"],
+      };
+      var chartPre = new ApexCharts(
+        document.querySelector("#chartPre"),
+        optionsPre
+      );
+      chartPre.render();
+    })
+    .catch((error) => {
+      console.log("DATE INVALIDE -> " + error);
+    });
+
+  fetch("http://localhost:8080/data/wind")
+    .then((response) => response.json())
+    .then((data) => {
+      const valueW = Math.round(data[0].value);
+      // WIND
+      var optionsWind = {
+        chart: {
+          height: 250,
+          type: "radialBar",
+        },
+
+        series: [valueW],
+        colors: ["deepskyblue"],
+        plotOptions: {
+          radialBar: {
+            startAngle: -90,
+            endAngle: 90,
+            hollow: {
+              margin: 0,
+              size: "70%",
+            },
+            track: {
+              startAngle: -90,
+              endAngle: 90,
+              dropShadow: {
+                enabled: true,
+                top: 2,
+                left: 0,
+                blur: 4,
+                opacity: 0.15,
+              },
+            },
+            dataLabels: {
+              name: {
+                offsetY: -30,
+                color: "#fff",
+                fontSize: "13px",
+              },
+              value: {
+                offsetY: -15,
+                color: "#fff",
+                fontSize: "30px",
+                show: true,
+                formatter: function (val) {
+                  return val + " km/h";
+                },
+              },
             },
           },
         },
-      },
-    },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shade: "dark",
-        type: "vertical",
-        gradientToColors: ["skyblue"],
-        stops: [0, 100],
-      },
-    },
-    stroke: {
-      lineCap: "round",
-    },
-    labels: ["Wind"],
-  };
-
-  var chartWind = new ApexCharts(
-    document.querySelector("#chartWind"),
-    optionsWind
-  );
-  chartWind.render();
+        fill: {
+          type: "gradient",
+          gradient: {
+            shade: "dark",
+            type: "vertical",
+            gradientToColors: ["skyblue"],
+            stops: [0, 100],
+          },
+        },
+        stroke: {
+          lineCap: "round",
+        },
+        labels: ["Wind"],
+      };
+      var chartWind = new ApexCharts(
+        document.querySelector("#chartWind"),
+        optionsWind
+      );
+      chartWind.render();
+    })
+    .catch((error) => {
+      console.log("DATE INVALIDE -> " + error);
+    });
 
   // CHART LINE 1 = TEMPERATURE
 
