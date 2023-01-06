@@ -96,7 +96,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     };
   }
 
-  fetch("http://localhost:8080/moyenne/2023-01-05")
+  fetch("http://localhost:8080/average/NTE/2023-01-05")
     .then((response) => response.json())
     .then((data) => {
       const value = Math.round(data.temperature_average);
