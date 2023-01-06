@@ -55,7 +55,14 @@ func GetByTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	allKeys := keysBetweenDate(date1_time, date2_time, persistence.SelectKeys(airportIATA, sensorType))
+	var keysOfDate []string
+	for date := date1_time; date.Before(date2_time) || date.Equal(date2_time); date = date.AddDate(0, 0, 1) {
+		keysOfDate = append(keysOfDate, persistence.SelectKeysByDate(airportIATA, sensorType, date.Format("2006-01-02"))...)
+	}
+
+	allKeys := keysBetweenDate(date1_time, date2_time, keysOfDate)
+	sort.Strings(allKeys)
+
 	if len(allKeys) == 0 {
 		http.Error(w, "No data available for this measure type", http.StatusNoContent)
 		return
@@ -94,6 +101,7 @@ func GetByType(w http.ResponseWriter, r *http.Request) {
 	}
 
 	allKeys := persistence.SelectKeys(airportIATA, sensorType)
+	sort.Strings(allKeys)
 	data := persistence.GetForKeys(allKeys)
 
 	jsonData, err := json.Marshal(data)
@@ -178,7 +186,7 @@ func formatDate(date string) (time.Time, error) {
 	return time.Parse("2006-01-02 15:04", date)
 }
 
-func keysBetweenDate(start, end time.Time, keysSensor []string) []string {
+func keysBetweenDate(start, end time.Time, keysMeasure []string) []string {
 	y, m, d := start.Date()
 	start = time.Date(y, m, d, start.Hour(), start.Minute(), 0, 0, time.UTC)
 	y, m, d = end.Date()
@@ -186,7 +194,7 @@ func keysBetweenDate(start, end time.Time, keysSensor []string) []string {
 
 	var res []string
 
-	for _, key := range keysSensor {
+	for _, key := range keysMeasure {
 		var elem entities.MeasureMemKey
 		json.Unmarshal([]byte(key), &elem)
 		date_time, _ := formatDate(elem.Date[:len(elem.Date)-3])
@@ -198,7 +206,6 @@ func keysBetweenDate(start, end time.Time, keysSensor []string) []string {
 			res = append(res, key)
 		}
 	}
-	sort.Strings(res)
 	return res
 }
 
