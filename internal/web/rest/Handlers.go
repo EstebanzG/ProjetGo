@@ -88,10 +88,9 @@ func GetDataSensorBetweenDate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if date1_time.After(date2_time) {
-		tmp := date1_time
-		date1_time = date2_time
-		date2_time = tmp
+	if date1_time.Before(date2_time) {
+		http.Error(w, "Bad Request, change date order", 400)
+		return
 	}
 
 	allKeys := keys_between_date(date1_time, date2_time, persistence.SelectKeysByType(sensorType))
