@@ -143,22 +143,31 @@ func GetAverageByDay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	allMeasures := persistence.SelectAllDataForADay(airportIATA, date)
-	if len(allMeasures) == 0 {
-		http.Error(w, "No data available for this day", http.StatusNoContent)
-		return
+	measuresAve := entities.MeasureAvg{}
+	isEmpty := true
+
+	measuresKeys := persistence.SelectKeysByDate(airportIATA, "wind", date)
+	measures := persistence.GetForKeys(measuresKeys)
+	if len(measures) != 0 {
+		measuresAve.WindAverage = average(measures)
+		isEmpty = false
+	}
+	measuresKeys = persistence.SelectKeysByDate(airportIATA, "pressure", date)
+	measures = persistence.GetForKeys(measuresKeys)
+	if len(measures) != 0 {
+		measuresAve.PressureAverage = average(measures)
+		isEmpty = false
+	}
+	measuresKeys = persistence.SelectKeysByDate(airportIATA, "temperature", date)
+	measures = persistence.GetForKeys(measuresKeys)
+	if len(measures) != 0 {
+		measuresAve.TemperatureAverage = average(measures)
+		isEmpty = false
 	}
 
-	measuresAve := entities.MeasureAvg{}
-	for measureNature, measures := range allMeasures {
-		average := average(measures)
-		if measureNature == "wind" {
-			measuresAve.WindAverage = average
-		} else if measureNature == "pressure" {
-			measuresAve.PressureAverage = average
-		} else {
-			measuresAve.TemperatureAverage = average
-		}
+	if isEmpty {
+		http.Error(w, "No data available for this day", http.StatusNoContent)
+		return
 	}
 
 	jsonData, err := json.Marshal(measuresAve)
