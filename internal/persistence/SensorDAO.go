@@ -10,11 +10,11 @@ import (
 	"strconv"
 )
 
-func SelectKeys(airportIATA string, sensorType string) []string {
+func SelectKeys(airportIATA string, measureType string) []string {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
 
-	keyFormat := format.DataKeyToStore(airportIATA, "*", sensorType, "*")
+	keyFormat := format.DataKeyToStore(airportIATA, "*", measureType, "*")
 	keys, err := redis.Strings(conn.Do("KEYS", keyFormat))
 	if err != nil {
 		log.Fatal(err)
@@ -22,11 +22,11 @@ func SelectKeys(airportIATA string, sensorType string) []string {
 	return keys
 }
 
-func SelectKeysByDate(airportIATA string, sensorType string, date string) []string {
+func SelectKeysByDate(airportIATA string, measureType string, date string) []string {
 	conn := database.GetConnexion()
 	defer database.Close(conn)
 
-	keyFormat := format.DataKeyToStore(airportIATA, date+"-*", sensorType, "*")
+	keyFormat := format.DataKeyToStore(airportIATA, date+"-*", measureType, "*")
 	keys, err := redis.Strings(conn.Do("KEYS", keyFormat))
 	if err != nil {
 		log.Fatal(err)
