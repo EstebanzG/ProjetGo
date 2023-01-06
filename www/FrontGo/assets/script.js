@@ -1,15 +1,5 @@
 window.addEventListener("DOMContentLoaded", (event) => {
   // WINDOWS APEX
-  async function getData() {
-    const response = await fetch("http://localhost:8080/data/temperature");
-    const data = await response.json();
-    return data;
-  }
-
-  getData().then((data) => {
-    optionsTemp.series.push(data[0].value);
-    console.log(data);
-  });
 
   window.Apex = {
     chart: {
@@ -106,78 +96,75 @@ window.addEventListener("DOMContentLoaded", (event) => {
     };
   }
 
-  // TEMPERATURE
-  var optionsTemp = {
-    chart: {
-      height: 250,
-      type: "radialBar",
-    },
-    series: [],
-    colors: ["sandybrown"],
-    plotOptions: {
-      radialBar: {
-        startAngle: -90,
-        endAngle: 90,
-        hollow: {
-          margin: 0,
-          size: "70%",
+  fetch("http://localhost:8080/average/NTE/2023-01-05")
+    .then((response) => response.json())
+    .then((data) => {
+      const value = Math.round(data.temperature_average);
+      // TEMPERATURE
+      var optionsTemp = {
+        chart: {
+          height: 250,
+          type: "radialBar",
         },
-        track: {
-          startAngle: -90,
-          endAngle: 90,
-          dropShadow: {
-            enabled: true,
-            top: 2,
-            left: 0,
-            blur: 4,
-            opacity: 0.15,
-          },
-        },
-        dataLabels: {
-          name: {
-            offsetY: -30,
-            color: "#fff",
-            fontSize: "13px",
-          },
-          value: {
-            offsetY: -15,
-            color: "#fff",
-            fontSize: "30px",
-            show: true,
-            formatter: function (value) {
-              return value + "°C";
+        series: [value],
+        colors: ["sandybrown"],
+        plotOptions: {
+          radialBar: {
+            startAngle: -90,
+            endAngle: 90,
+            hollow: {
+              margin: 0,
+              size: "70%",
+            },
+            track: {
+              startAngle: -90,
+              endAngle: 90,
+              dropShadow: {
+                enabled: true,
+                top: 2,
+                left: 0,
+                blur: 4,
+                opacity: 0.15,
+              },
+            },
+            dataLabels: {
+              name: {
+                offsetY: -30,
+                color: "#fff",
+                fontSize: "13px",
+              },
+              value: {
+                offsetY: -15,
+                color: "#fff",
+                fontSize: "30px",
+                show: true,
+                formatter: function (value) {
+                  return value + "°C";
+                },
+              },
             },
           },
         },
-      },
-    },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shade: "dark",
-        type: "vertical",
-        gradientToColors: ["peachpuff"],
-        stops: [0, 100],
-      },
-    },
-    stroke: {
-      lineCap: "round",
-    },
-    labels: ["Temperature"],
-  };
-  fetch("http://localhost:8080/data/temperature")
-    .then((response) => response.json())
-    .then((data) => {
-      optionsTemp.series.push(data[0].value);
-      console.log(optionsTemp.series);
-    })
-    .catch((error) => console.error(error));
-  console.log("Array " + optionsTemp.series[0]);
-  var chartTemp = new ApexCharts(
-    document.querySelector("#chartTemp"),
-    optionsTemp
-  );
-  chartTemp.render();
+        fill: {
+          type: "gradient",
+          gradient: {
+            shade: "dark",
+            type: "vertical",
+            gradientToColors: ["peachpuff"],
+            stops: [0, 100],
+          },
+        },
+        stroke: {
+          lineCap: "round",
+        },
+        labels: ["Temperature"],
+      };
+      var chartTemp = new ApexCharts(
+        document.querySelector("#chartTemp"),
+        optionsTemp
+      );
+      chartTemp.render();
+    });
 
   // PRESSURE
 
