@@ -18,7 +18,7 @@ func main() {
 	router.HandleFunc("/data/{airportIATA}/{measureType}", rest.GetByType)
 	router.HandleFunc("/data/{airportIATA}/{measureType}/{startDate}/{endDate}", rest.GetByTypeBetweenDate)
 	router.HandleFunc("/average/{airportIATA}/{date}", rest.GetAverageByDay)
-	// NE JAMAIS SUPPRIMER CES LIGNES SINON ÇA MARCHE PLUS ! OK ?!
+
 	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 	origins := handlers.AllowedOrigins([]string{"*"})

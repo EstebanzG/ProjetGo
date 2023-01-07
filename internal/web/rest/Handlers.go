@@ -25,7 +25,7 @@ func GetByTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
 	matchStartDate, _ := matchDateHour(startDate)
 	matchEndDate, _ := matchDateHour(endDate)
 	if !matchStartDate || !matchEndDate {
-		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD-hh:mm", 400)
+		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD-hh:mm", http.StatusBadRequest)
 		return
 	}
 
@@ -39,7 +39,7 @@ func GetByTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if formatStartDate.After(formatEndDate) {
-		http.Error(w, "Bad Request, change date order", 401)
+		http.Error(w, "Bad Request, change date order", http.StatusBadRequest)
 		return
 	}
 
@@ -86,12 +86,12 @@ func GetAverageByDay(w http.ResponseWriter, r *http.Request) {
 
 	match, _ := matchDate(date)
 	if !match {
-		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", 402)
+		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", http.StatusBadRequest)
 		return
 	}
 	_, err := time.Parse("2006-01-02", date)
 	if err != nil {
-		http.Error(w, "Bad Request, the day doesn't exist", 403)
+		http.Error(w, "Bad Request, the day doesn't exist", http.StatusBadRequest)
 		return
 	}
 
@@ -130,12 +130,12 @@ func keysBetweenDate(start, end time.Time, keysMeasure []string) []string {
 	for _, key := range keysMeasure {
 		var elem entities.MeasureMemKey
 		json.Unmarshal([]byte(key), &elem)
-		date_time, _ := formatDate(elem.Date[:len(elem.Date)-3])
+		dateTime, _ := formatDate(elem.Date[:len(elem.Date)-3])
 
-		y, m, d = date_time.Date()
-		date_time = time.Date(y, m, d, date_time.Hour(), date_time.Minute(), 0, 0, time.UTC)
+		y, m, d = dateTime.Date()
+		dateTime = time.Date(y, m, d, dateTime.Hour(), dateTime.Minute(), 0, 0, time.UTC)
 
-		if (date_time.After(start) && date_time.Before(end)) || date_time.Equal(start) {
+		if (dateTime.After(start) && dateTime.Before(end)) || dateTime.Equal(start) {
 			res = append(res, key)
 		}
 	}
@@ -205,7 +205,7 @@ func errNoData(w http.ResponseWriter) {
 }
 
 func errAirportIATA(w http.ResponseWriter) {
-	http.Error(w, "Bad Request, the airport IATA code is invalid", 400)
+	http.Error(w, "Bad Request, the airport IATA code is invalid", http.StatusBadRequest)
 	return
 }
 
