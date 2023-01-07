@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"foo.org/myapp/internal/format"
 	"math/rand"
 	"time"
@@ -16,15 +17,29 @@ func main() {
 func pub() {
 	var sensorId = config.GetPressureSensorId()
 	var airportIATA = config.GetAirportIATA()
+	var pressure float32 = 0.0
 
 	client := server.Connect(config.GetFullURL(), "pressure")
 
 	for {
-		s1 := rand.NewSource(time.Now().UnixNano())
-		r1 := rand.New(s1)
-		press := r1.Intn(35)
-		dataToSend := format.DataToSend(sensorId, airportIATA, "pressure", float32(press))
+		pressure = generate(pressure)
+		fmt.Println(pressure)
+		dataToSend := format.DataToSend(sensorId, airportIATA, "pressure", pressure)
 		client.Publish("pressure", config.GetqOs(), false, dataToSend).Wait()
 		time.Sleep(10 * time.Second)
 	}
+}
+
+func generate(oldPressure float32) float32 {
+	if oldPressure == 0.0 {
+		rand.Seed(time.Now().UnixNano())
+		// Between 990 and 1020
+		return 990 + rand.Float32()*30
+	}
+	// Between -2 and 2
+	delta := -2 + rand.Float32()*4
+	if oldPressure+delta < 960 || oldPressure+delta > 1040 {
+		return oldPressure
+	}
+	return oldPressure + delta
 }

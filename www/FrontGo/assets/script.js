@@ -1,16 +1,5 @@
 window.addEventListener("DOMContentLoaded", (event) => {
   // WINDOWS APEX
-  async function getData() {
-    const response = await fetch("http://localhost:8080/data/temperature");
-    const data = await response.json();
-    return data;
-  }
-
-  getData().then((data) => {
-    optionsTemp.series.push(data[0].value);
-    console.log(data);
-  });
-
   window.Apex = {
     chart: {
       foreColor: "#fff",
@@ -58,61 +47,127 @@ window.addEventListener("DOMContentLoaded", (event) => {
       },
     },
   };
-
-  var trigoStrength = 3;
-  var iteration = 11;
-
-  // RANDOM FUNCTIONS
-
-  function getRandom() {
-    var i = iteration;
-    return (
-      (Math.sin(i / trigoStrength) * (i / trigoStrength) +
-        i / trigoStrength +
-        1) *
-      (trigoStrength * 2)
-    );
-  }
-
-  function getRangeRandom(yrange) {
-    return (
-      Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min
-    );
-  }
-
-  function generateMinuteWiseTimeSeries(baseval, count, yrange) {
-    var i = 0;
-    var series = [];
-    while (i < count) {
-      var x = baseval;
-      var y =
-        (Math.sin(i / trigoStrength) * (i / trigoStrength) +
-          i / trigoStrength +
-          1) *
-        (trigoStrength * 2);
-
-      series.push([x, y]);
-      baseval += 300000;
-      i++;
+  // FUNCTION DATE
+  function generateDate() {
+    var date = new Date();
+    let day = date.getDate();
+    if (day < 10) {
+      day = "0" + day;
     }
-    return series;
+    let month = date.getMonth() + 1;
+    if (month < 10) {
+      month = "0" + month;
+    }
+    let year = date.getFullYear();
+    return (currentDate = `${year}-${month}-${day}`);
   }
-
-  function getNewData(baseval, yrange) {
-    var newTime = baseval + 300000;
-    return {
-      x: newTime,
-      y: Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min,
-    };
+  function generateCurrentDate() {
+    var date = new Date();
+    let day = date.getDate();
+    if (day < 10) {
+      day = "0" + day;
+    }
+    let month = date.getMonth() + 1;
+    if (month < 10) {
+      month = "0" + month;
+    }
+    let year = date.getFullYear();
+    let hour = date.getHours();
+    if (hour < 10) {
+      hour = "0" + hour;
+    }
+    let min = date.getMinutes();
+    if (min < 10) {
+      min = "0" + min;
+    }
+    return (currentDate = `${year}-${month}-${day}-${hour}:${min}`);
   }
-
-  // TEMPERATURE
+  function generatePrevioustDate() {
+    var date = new Date();
+    let day = date.getDate();
+    if (day < 10) {
+      day = "0" + day;
+    }
+    let month = date.getMonth() + 1;
+    if (month < 10) {
+      month = "0" + month;
+    }
+    let year = date.getFullYear();
+    let hour = date.getHours();
+    if (hour < 10) {
+      hour = "0" + hour;
+    }
+    let min = date.getMinutes();
+    if (min < 10) {
+      min = "0" + min;
+    }
+    let minBefore = date.getMinutes() - 1;
+    if (minBefore < 10) {
+      minBefore = "0" + minBefore;
+    }
+    return (previousDate = `${year}-${month}-${day}-${hour}:${minBefore}`);
+  }
+  function generateCompleteDate() {
+    var date = new Date();
+    let day = date.getDate();
+    if (day < 10) {
+      day = "0" + day;
+    }
+    let month = date.getMonth() + 1;
+    if (month < 10) {
+      month = "0" + month;
+    }
+    let year = date.getFullYear();
+    let hour = date.getHours();
+    if (hour < 10) {
+      hour = "0" + hour;
+    }
+    let min = date.getMinutes();
+    if (min < 10) {
+      min = "0" + min;
+    }
+    let sec = date.getSeconds();
+    if (sec < 10) {
+      sec = "0" + sec;
+    }
+    return (completeDate = `${year}-${month}-${day}-${hour}:${min}:${sec}`);
+  }
+  function generatePreviousCompleteDate() {
+    var date = new Date();
+    let day = date.getDate();
+    if (day < 10) {
+      day = "0" + day;
+    }
+    let month = date.getMonth() + 1;
+    if (month < 10) {
+      month = "0" + month;
+    }
+    let year = date.getFullYear();
+    let hour = date.getHours();
+    if (hour < 10) {
+      hour = "0" + hour;
+    }
+    let min = date.getMinutes();
+    if (min < 10) {
+      min = "0" + min;
+    }
+    let sec = date.getSeconds();
+    if (sec < 10) {
+      sec = "0" + sec;
+    }
+    let secBefore = date.getSeconds() - 9;
+    if (secBefore < 10) {
+      secBefore = "0" + secBefore;
+    }
+    return (completeDate = `${year}-${month}-${day}-${hour}:${min}:${secBefore}`);
+  }
+  // TEMPERATURE GAUGE
   var optionsTemp = {
     chart: {
       height: 250,
       type: "radialBar",
     },
-    series: [],
+    series: [0],
     colors: ["sandybrown"],
     plotOptions: {
       radialBar: {
@@ -145,7 +200,9 @@ window.addEventListener("DOMContentLoaded", (event) => {
             fontSize: "30px",
             show: true,
             formatter: function (value) {
-              return value + "°C";
+              if (value == 0) {
+                return value + "°C";
+              } else return value - 10 + "°C";
             },
           },
         },
@@ -165,97 +222,19 @@ window.addEventListener("DOMContentLoaded", (event) => {
     },
     labels: ["Temperature"],
   };
-  fetch("http://localhost:8080/data/temperature")
-    .then((response) => response.json())
-    .then((data) => {
-      optionsTemp.series.push(data[0].value);
-      console.log(optionsTemp.series);
-    })
-    .catch((error) => console.error(error));
-  console.log("Array " + optionsTemp.series[0]);
   var chartTemp = new ApexCharts(
     document.querySelector("#chartTemp"),
     optionsTemp
   );
   chartTemp.render();
 
-  // PRESSURE
-
-  var optionsPre = {
-    chart: {
-      height: 250,
-      type: "radialBar",
-    },
-
-    series: [35],
-    colors: ["seagreen"], // alert : indianred
-    plotOptions: {
-      radialBar: {
-        startAngle: -90,
-        endAngle: 90,
-        hollow: {
-          margin: 0,
-          size: "70%",
-        },
-        track: {
-          startAngle: -90,
-          endAngle: 90,
-          dropShadow: {
-            enabled: true,
-            top: 2,
-            left: 0,
-            blur: 4,
-            opacity: 0.15,
-          },
-        },
-        dataLabels: {
-          name: {
-            offsetY: -30,
-            color: "#fff",
-            fontSize: "13px",
-          },
-          value: {
-            offsetY: -15,
-            color: "#fff",
-            fontSize: "30px",
-            show: true,
-            formatter: function (val) {
-              return val + " P";
-            },
-          },
-        },
-      },
-    },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shade: "dark",
-        type: "vertical",
-        gradientToColors: ["lightgreen"],
-        stops: [0, 100],
-      },
-    },
-    stroke: {
-      lineCap: "round",
-    },
-    labels: ["Pressure"],
-  };
-
-  var chartPre = new ApexCharts(
-    document.querySelector("#chartPre"),
-    optionsPre
-  );
-  chartPre.render();
-
-  // WIND
-
+  // WIND GAUGE
   var optionsWind = {
     chart: {
       height: 250,
       type: "radialBar",
     },
-
-    series: [60],
+    series: [0],
     colors: ["deepskyblue"],
     plotOptions: {
       radialBar: {
@@ -287,8 +266,8 @@ window.addEventListener("DOMContentLoaded", (event) => {
             color: "#fff",
             fontSize: "30px",
             show: true,
-            formatter: function (val) {
-              return val + " km/h";
+            formatter: function (value) {
+              return value + " km/h";
             },
           },
         },
@@ -308,363 +287,121 @@ window.addEventListener("DOMContentLoaded", (event) => {
     },
     labels: ["Wind"],
   };
-
   var chartWind = new ApexCharts(
     document.querySelector("#chartWind"),
     optionsWind
   );
   chartWind.render();
 
-  // CHART LINE 1 = TEMPERATURE
-
-  var optionsLine = {
+  // PRESSURE GAUGE
+  var optionsPressure = {
     chart: {
       height: 250,
-      width: 370,
-      type: "line",
-      stacked: true,
-      animations: {
-        enabled: true,
-        easing: "linear",
-        dynamicAnimation: {
-          speed: 1000,
+      type: "radialBar",
+    },
+    series: [0],
+    colors: ["seagreen"],
+    plotOptions: {
+      radialBar: {
+        startAngle: -90,
+        endAngle: 90,
+        hollow: {
+          margin: 0,
+          size: "70%",
         },
-      },
-      dropShadow: {
-        enabled: true,
-        opacity: 0.3,
-        blur: 5,
-        left: -7,
-        top: 22,
-      },
-      events: {
-        animationEnd: function (chartCtx, opts) {
-          const newData1 = chartCtx.w.config.series[0].data.slice();
-          newData1.shift();
-
-          // check animation end event for just 1 series to avoid multiple updates
-          if (opts.el.node.getAttribute("index") === "0") {
-            window.setTimeout(function () {
-              chartCtx.updateOptions(
-                {
-                  series: [
-                    {
-                      data: newData1,
-                    },
-                  ],
-                  subtitle: {
-                    text: parseInt(getRandom() * Math.random()).toString(),
-                  },
-                },
-                false,
-                false
-              );
-            }, 300);
-          }
+        track: {
+          startAngle: -90,
+          endAngle: 90,
+          dropShadow: {
+            enabled: true,
+            top: 2,
+            left: 0,
+            blur: 4,
+            opacity: 0.15,
+          },
         },
-      },
-      toolbar: {
-        show: false,
-      },
-      zoom: {
-        enabled: false,
+        dataLabels: {
+          name: {
+            offsetY: -30,
+            color: "#fff",
+            fontSize: "13px",
+          },
+          value: {
+            offsetY: -15,
+            color: "#fff",
+            fontSize: "30px",
+            show: true,
+            formatter: function (value) {
+              return value * 20 + " P";
+            },
+          },
+        },
       },
     },
-    dataLabels: {
-      enabled: false,
+    fill: {
+      type: "gradient",
+      gradient: {
+        shade: "dark",
+        type: "vertical",
+        gradientToColors: ["lightgreen"],
+        stops: [0, 100],
+      },
     },
     stroke: {
-      curve: "straight",
-      width: 5,
+      lineCap: "round",
     },
-    grid: {
-      padding: {
-        left: 0,
-        right: 0,
-      },
-    },
-    markers: {
-      size: 0,
-      hover: {
-        size: 0,
-      },
-    },
-    series: [
-      {
-        data: generateMinuteWiseTimeSeries(
-          new Date("12/12/2016 00:20:00").getTime(),
-          12,
-          {
-            min: 30,
-            max: 110,
-          }
-        ),
-      },
-    ],
-    xaxis: {
-      type: "datetime",
-      range: 2700000,
-    },
-    title: {
-      text: "Temperature",
-      align: "left",
-      style: {
-        fontSize: "12px",
-      },
-    },
-    subtitle: {
-      text: "°C",
-      floating: true,
-      align: "right",
-      offsetY: 0,
-      style: {
-        fontSize: "22px",
-      },
-    },
-    legend: {
-      show: false,
-    },
+    labels: ["Pressure"],
   };
-
-  var chartLine = new ApexCharts(
-    document.querySelector("#linechart"),
-    optionsLine
+  var chartPressure = new ApexCharts(
+    document.querySelector("#chartPressure"),
+    optionsPressure
   );
-  chartLine.render();
+  chartPressure.render();
 
-  // CHART LINE 2 = PRESSURE
-
-  var optionsLine2 = {
-    chart: {
-      height: 250,
-      width: 370,
-      type: "line",
-      stacked: true,
-      animations: {
-        enabled: true,
-        easing: "linear",
-        dynamicAnimation: {
-          speed: 1000,
-        },
-      },
-      dropShadow: {
-        enabled: true,
-        opacity: 0.3,
-        blur: 5,
-        left: -7,
-        top: 22,
-      },
-      events: {
-        animationEnd: function (chartCtx, opts) {
-          const newData1 = chartCtx.w.config.series[0].data.slice();
-          newData1.shift();
-
-          // check animation end event for just 1 series to avoid multiple updates
-          if (opts.el.node.getAttribute("index") === "0") {
-            window.setTimeout(function () {
-              chartCtx.updateOptions(
-                {
-                  series: [
-                    {
-                      data: newData1,
-                    },
-                  ],
-                  subtitle: {
-                    text: parseInt(getRandom() * Math.random()).toString(),
-                  },
-                },
-                false,
-                false
-              );
-            }, 300);
+  window.setInterval(() => {
+    var dateComplete = generateCompleteDate();
+    var dateCompletePrevious = generatePreviousCompleteDate();
+    fetch("http://localhost:8080/data/temperature")
+      .then((response) => response.json())
+      .then((data) => {
+        data.forEach((element) => {
+          if (
+            element.date > dateCompletePrevious &&
+            element.date <= dateComplete
+          ) {
+            //console.log("Temperature : " + element.value);
+            var val = Math.round(element.value * 10) / 10;
+            chartTemp.updateSeries([val + 10]);
           }
-        },
-      },
-      toolbar: {
-        show: false,
-      },
-      zoom: {
-        enabled: false,
-      },
-    },
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      curve: "straight",
-      width: 5,
-    },
-    grid: {
-      padding: {
-        left: 0,
-        right: 0,
-      },
-    },
-    markers: {
-      size: 0,
-      hover: {
-        size: 0,
-      },
-    },
-    series: [
-      {
-        data: generateMinuteWiseTimeSeries(
-          new Date("12/12/2016 00:20:00").getTime(),
-          12,
-          {
-            min: 30,
-            max: 110,
+        });
+      });
+    fetch("http://localhost:8080/data/wind")
+      .then((response) => response.json())
+      .then((data) => {
+        data.forEach((element) => {
+          if (
+            element.date > dateCompletePrevious &&
+            element.date <= dateComplete
+          ) {
+            //console.log("Vitesse du vent : " + element.value);
+            chartWind.updateSeries([element.value]);
           }
-        ),
-      },
-    ],
-    xaxis: {
-      type: "datetime",
-      range: 2700000,
-    },
-    title: {
-      text: "Pressure",
-      align: "left",
-      style: {
-        fontSize: "12px",
-      },
-    },
-    subtitle: {
-      text: "Pascal",
-      floating: true,
-      align: "right",
-      offsetY: 0,
-      style: {
-        fontSize: "22px",
-      },
-    },
-    legend: {
-      show: false,
-    },
-  };
-
-  var chartLine2 = new ApexCharts(
-    document.querySelector("#linechart2"),
-    optionsLine2
-  );
-  chartLine2.render();
-
-  // CHART LINE 3 = WIND
-
-  var optionsLine3 = {
-    chart: {
-      height: 250,
-      width: 370,
-      type: "line",
-      stacked: true,
-      animations: {
-        enabled: true,
-        easing: "linear",
-        dynamicAnimation: {
-          speed: 1000,
-        },
-      },
-      dropShadow: {
-        enabled: true,
-        opacity: 0.3,
-        blur: 5,
-        left: -7,
-        top: 22,
-      },
-      events: {
-        animationEnd: function (chartCtx, opts) {
-          const newData1 = chartCtx.w.config.series[0].data.slice();
-          newData1.shift();
-
-          // check animation end event for just 1 series to avoid multiple updates
-          if (opts.el.node.getAttribute("index") === "0") {
-            window.setTimeout(function () {
-              chartCtx.updateOptions(
-                {
-                  series: [
-                    {
-                      data: newData1,
-                    },
-                  ],
-                  subtitle: {
-                    text: parseInt(getRandom() * Math.random()).toString(),
-                  },
-                },
-                false,
-                false
-              );
-            }, 300);
+        });
+      });
+    fetch("http://localhost:8080/data/pressure")
+      .then((response) => response.json())
+      .then((data) => {
+        data.forEach((element) => {
+          if (
+            element.date > dateCompletePrevious &&
+            element.date <= dateComplete
+          ) {
+            //console.log("Pression : " + element.value);
+            chartPressure.updateSeries([Math.round(element.value / 20)]);
           }
-        },
-      },
-      toolbar: {
-        show: false,
-      },
-      zoom: {
-        enabled: false,
-      },
-    },
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      curve: "straight",
-      width: 5,
-    },
-    grid: {
-      padding: {
-        left: 0,
-        right: 0,
-      },
-    },
-    markers: {
-      size: 0,
-      hover: {
-        size: 0,
-      },
-    },
-    series: [
-      {
-        data: generateMinuteWiseTimeSeries(
-          new Date("12/12/2016 00:20:00").getTime(),
-          12,
-          {
-            min: 30,
-            max: 110,
-          }
-        ),
-      },
-    ],
-    xaxis: {
-      type: "datetime",
-      range: 2700000,
-    },
-    title: {
-      text: "Wind",
-      align: "left",
-      style: {
-        fontSize: "12px",
-      },
-    },
-    subtitle: {
-      text: "km/h",
-      floating: true,
-      align: "right",
-      offsetY: 0,
-      style: {
-        fontSize: "22px",
-      },
-    },
-    legend: {
-      show: false,
-    },
-  };
-
-  var chartLine3 = new ApexCharts(
-    document.querySelector("#linechart3"),
-    optionsLine3
-  );
-  chartLine3.render();
+        });
+      });
+  }, 3000);
 
   // AVERAGE CHART
 
@@ -705,7 +442,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
       floating: true,
       align: "right",
       offsetY: 0,
-      text: "44%",
+      text: "km/h",
       style: {
         fontSize: "20px",
       },
@@ -729,6 +466,18 @@ window.addEventListener("DOMContentLoaded", (event) => {
     optionsProgress1
   );
   chartProgress1.render();
+
+  var cd = generateDate();
+  fetch(`http://localhost:8080/average/${cd}`)
+    .then((response) => response.json())
+    .then((data) => {
+      chartProgress1.updateSeries([
+        {
+          name: "Process 1",
+          data: [data.temperature_average],
+        },
+      ]);
+    });
 
   var optionsProgress2 = {
     chart: {
@@ -863,11 +612,73 @@ window.addEventListener("DOMContentLoaded", (event) => {
   );
   chartProgress3.render();
 
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  /*
   // REAL TIME FUNCTION
 
   window.setInterval(function () {
     iteration++;
 
+    //
+    //
+    // DATE
+    //
+    //
+    var date = new Date();
+    let day = date.getDate();
+    if (day < 10) {
+      day = "0" + day;
+    }
+    let month = date.getMonth() + 1;
+    if (month < 10) {
+      month = "0" + month;
+    }
+    let year = date.getFullYear();
+    let hour = date.getHours();
+    if (hour < 10) {
+      hour = "0" + hour;
+    }
+    let min = date.getMinutes();
+    if (min < 10) {
+      min = "0" + min;
+    }
+    let minBefore = date.getMinutes() - 1;
+    if (minBefore < 10) {
+      minBefore = "0" + minBefore;
+    }
+    let currentDate = `${year}-${month}-${day}-${hour}:${min}`;
+    console.log(currentDate);
+    let previousDate = `${year}-${month}-${day}-${hour}:${minBefore}`;
+    console.log(previousDate);
+    //
+    //
+    // TEMPERATURE
+    //
+    //
+    //
+    //
+    // PRESSURE
+    //
+    //
     chartLine.updateSeries([
       {
         data: [
@@ -877,14 +688,20 @@ window.addEventListener("DOMContentLoaded", (event) => {
       },
     ]);
 
-    chartLine2.updateSeries([
-      {
-        data: [
-          ...chartLine2.w.config.series[0].data,
-          [chartLine2.w.globals.maxX + 300000, getRandom()],
-        ],
-      },
-    ]);
+    var tab = [];
+    var urlChartLine2 = `http://localhost:8080/data/pressure/${previousDate}/${currentDate}`;
+    fetch(urlChartLine2)
+      .then((response) => response.json())
+      .then((data) => {
+        data.forEach((element) => {
+          tab.push(element.value);
+        });
+        console.log(tab);
+        chartLine2.updateSeries([{ data: tab }]);
+      })
+      .catch((error) => {
+        console.log("LOAD -> " + error);
+      });
 
     chartLine3.updateSeries([
       {
@@ -931,4 +748,5 @@ window.addEventListener("DOMContentLoaded", (event) => {
       },
     });
   }, 3000);
+  */
 });

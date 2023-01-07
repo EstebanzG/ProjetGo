@@ -6,33 +6,111 @@ import (
 	"foo.org/myapp/internal/entities"
 	"foo.org/myapp/internal/persistence"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
 
-func GetBySensorType(w http.ResponseWriter, r *http.Request) {
+// ---------------------- route function ----------------------
+
+func GetByTypeBetweenDate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	sensorType := vars["sensorType"]
+	measureType := vars["measureType"]
+	startDate := vars["startDate"]
+	endDate := vars["endDate"]
+	airportIATA := getAirportIATA(w, vars)
 
-	data := persistence.SelectByType(sensorType)
-
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	matchStartDate, _ := matchDateHour(startDate)
+	matchEndDate, _ := matchDateHour(endDate)
+	if !matchStartDate || !matchEndDate {
+		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD-hh:mm", http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(jsonData)
-	if err != nil {
-		log.Fatal(err)
+
+	formatStartDate, err1 := formatDate(startDate)
+	if err1 != nil {
+		errInternal(w, err1)
+	}
+	formatEndDate, err2 := formatDate(endDate)
+	if err2 != nil {
+		errInternal(w, err2)
+	}
+
+	if formatStartDate.After(formatEndDate) {
+		http.Error(w, "Bad Request, change date order", http.StatusBadRequest)
 		return
 	}
+
+	var keysOfDate []string
+	for date := formatStartDate; date.Before(formatEndDate) || date.Equal(formatEndDate); date = date.AddDate(0, 0, 1) {
+		keysOfDate = append(keysOfDate, persistence.SelectKeysByDate(airportIATA, measureType, date.Format("2006-01-02"))...)
+	}
+
+	allKeys := keysBetweenDate(formatStartDate, formatEndDate, keysOfDate)
+	sort.Strings(allKeys)
+
+	if len(allKeys) == 0 {
+		errNoData(w)
+	}
+	data := persistence.GetForKeys(allKeys)
+	if len(data) == 0 {
+		errNoData(w)
+	}
+
+	render(w, data)
 }
 
-func format_date(date string) (time.Time, error) {
+func GetByType(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	measureType := vars["measureType"]
+	airportIATA := getAirportIATA(w, vars)
+
+	allKeys := persistence.SelectKeys(airportIATA, measureType)
+	sort.Strings(allKeys)
+	if len(allKeys) == 0 {
+		errNoData(w)
+	}
+	data := persistence.GetForKeys(allKeys)
+	if len(data) == 0 {
+		errNoData(w)
+	}
+	render(w, data)
+}
+
+func GetAverageByDay(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	date := vars["date"]
+	airportIATA := getAirportIATA(w, vars)
+
+	match, _ := matchDate(date)
+	if !match {
+		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", http.StatusBadRequest)
+		return
+	}
+	_, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		http.Error(w, "Bad Request, the day doesn't exist", http.StatusBadRequest)
+		return
+	}
+
+	measuresAve := entities.MeasureAvg{}
+	var isWind, isPressure, isTemperature bool
+	measuresAve.WindAverage, isWind = averageType(airportIATA, "wind", date)
+	measuresAve.PressureAverage, isPressure = averageType(airportIATA, "pressure", date)
+	measuresAve.TemperatureAverage, isTemperature = averageType(airportIATA, "temperature", date)
+
+	if !(isWind && isPressure && isTemperature) {
+		errNoData(w)
+	}
+
+	render(w, measuresAve)
+}
+
+// ---------------------- other function ----------------------
+
+func formatDate(date string) (time.Time, error) {
 	index := strings.LastIndex(date, "-")
 	b := []byte(date)
 	b[index] = ' '
@@ -41,7 +119,7 @@ func format_date(date string) (time.Time, error) {
 	return time.Parse("2006-01-02 15:04", date)
 }
 
-func keys_between_date(start, end time.Time, keysSensor []string) []string {
+func keysBetweenDate(start, end time.Time, keysMeasure []string) []string {
 	y, m, d := start.Date()
 	start = time.Date(y, m, d, start.Hour(), start.Minute(), 0, 0, time.UTC)
 	y, m, d = end.Date()
@@ -49,123 +127,68 @@ func keys_between_date(start, end time.Time, keysSensor []string) []string {
 
 	var res []string
 
-	for _, key := range keysSensor {
+	for _, key := range keysMeasure {
 		var elem entities.MeasureMemKey
 		json.Unmarshal([]byte(key), &elem)
-		date_time, _ := format_date(elem.Date[:len(elem.Date)-3])
+		dateTime, _ := formatDate(elem.Date[:len(elem.Date)-3])
 
-		y, m, d = date_time.Date()
-		date_time = time.Date(y, m, d, date_time.Hour(), date_time.Minute(), 0, 0, time.UTC)
+		y, m, d = dateTime.Date()
+		dateTime = time.Date(y, m, d, dateTime.Hour(), dateTime.Minute(), 0, 0, time.UTC)
 
-		if (date_time.After(start) && date_time.Before(end)) || date_time.Equal(start) {
+		if (dateTime.After(start) && dateTime.Before(end)) || dateTime.Equal(start) {
 			res = append(res, key)
 		}
 	}
 	return res
 }
 
-func GetDataSensorBetweenDate(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	sensorType := vars["sensorType"]
-	date1 := vars["date1"]
-	date2 := vars["date2"]
-	match1, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}$", date1)
-	match2, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}$", date2)
-
-	if !match1 || !match2 {
-		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD-hh:mm", http.StatusBadRequest)
-		return
+func average(measures []entities.MeasureValue) float32 {
+	var sum float32 = 0.0
+	for _, measure := range measures {
+		sum += measure.Value
 	}
-
-	date1_time, err1 := format_date(date1)
-	if err1 != nil {
-		http.Error(w, err1.Error(), http.StatusInternalServerError)
-		return
-	}
-	date2_time, err2 := format_date(date2)
-	if err2 != nil {
-		http.Error(w, err2.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if date1_time.After(date2_time) {
-		tmp := date1_time
-		date1_time = date2_time
-		date2_time = tmp
-	}
-
-	allKeys := keys_between_date(date1_time, date2_time, persistence.SelectKeysByType(sensorType))
-	if len(allKeys) == 0 {
-		http.Error(w, "No data available for this measure type", http.StatusNoContent)
-		return
-	}
-	data := persistence.GetForKeys(allKeys)
-	if len(data) == 0 {
-		http.Error(w, "No data available for this measure type", http.StatusNoContent)
-		return
-	}
-
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(jsonData)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+	return sum / float32(len(measures))
 }
 
-func GetAverageOfAllMeasureByADay(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+func averageType(airportIATA, measureType, date string) (float32, bool) {
+	measuresKeys := persistence.SelectKeysByDate(airportIATA, measureType, date)
+	measures := persistence.GetForKeys(measuresKeys)
+	if len(measures) != 0 {
+		return average(measures), true
+	}
+	return 0.00, false
+}
 
-	airportIATA, exist := vars["airportIATA"]
-	if exist {
-		match, _ := regexp.MatchString("^[A-Z]{3}$", airportIATA)
+func matchAirport(airportIATA string) (bool, error) {
+	return regexp.MatchString("^[A-Z]{3}$", airportIATA)
+}
+
+func matchDate(date string) (bool, error) {
+	return regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", date)
+}
+
+func matchDateHour(date string) (bool, error) {
+	return regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}$", date)
+}
+
+func getAirportIATA(w http.ResponseWriter, vars map[string]string) string {
+	airportIATA, exists := vars["airportIATA"]
+	if exists {
+		match, _ := matchAirport(airportIATA)
 		if !match {
-			http.Error(w, "Bad Request, the airport IATA code is invalid", 400)
-			return
+			errAirportIATA(w)
 		}
 	} else {
 		airportIATA = "*"
 	}
+	return airportIATA
+}
 
-	date := vars["date"]
-	match, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", date)
-	if !match {
-		http.Error(w, "Bad Request, the date must respect the format : YYYY-MM-DD", 401)
-		return
-	}
-	_, err := time.Parse("2006-01-02", date)
+// ---------------------- error and render function ----------------------
+func render(w http.ResponseWriter, data any) {
+	jsonData, err := json.Marshal(data)
 	if err != nil {
-		http.Error(w, "Bad Request, the day isn't exist", 402)
-		return
-	}
-
-	allMeasures := persistence.SelectAllDataForADay(airportIATA, date)
-	if len(allMeasures) == 0 {
-		http.Error(w, "No data available for this day", http.StatusNoContent)
-		return
-	}
-
-	measuresAve := entities.MeasureAvg{}
-	for measureNature, measures := range allMeasures {
-		average := GetAverage(measures)
-		if measureNature == "wind" {
-			measuresAve.WindAverage = average
-		} else if measureNature == "pressure" {
-			measuresAve.PressureAverage = average
-		} else {
-			measuresAve.TemperatureAverage = average
-		}
-	}
-
-	jsonData, err := json.Marshal(measuresAve)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		errInternal(w, err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -176,10 +199,17 @@ func GetAverageOfAllMeasureByADay(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetAverage(measures []entities.MeasureValue) float32 {
-	var sum float32 = 0.0
-	for _, measure := range measures {
-		sum += measure.Value
-	}
-	return sum / float32(len(measures))
+func errNoData(w http.ResponseWriter) {
+	http.Error(w, "No data available for this day", http.StatusNoContent)
+	return
+}
+
+func errAirportIATA(w http.ResponseWriter) {
+	http.Error(w, "Bad Request, the airport IATA code is invalid", http.StatusBadRequest)
+	return
+}
+
+func errInternal(w http.ResponseWriter, err error) {
+	http.Error(w, err.Error(), http.StatusInternalServerError)
+	return
 }

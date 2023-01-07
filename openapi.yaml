@@ -1,6 +1,6 @@
 ---
 openapi: 3.0.0
-servers: 
+servers:
   - url: "http://localhost:8080/"
 
 info:
@@ -21,26 +21,102 @@ paths:
         - name: date
           in: path
           required: true
-          description: The date of the day for which you want the average data, with the following format YYYY-MM-DD
+          description: The day you want the average data, with the following format YYYY-MM-DD
           schema:
             type : string
+            example: 2023-01-05
             minimum: 10
             maximum: 10
       responses:
-        '401':
-          description: Bad Request, the date must respect the format YYYY-MM-DD
-        '402':
-          description: Bad Request, the day isn't exist
-        '204':
+        400:
+          description: Bad Request, explanation
+        500:
+          description: Internal server error, explanation
+        204:
           description: No data available for this day
-        '200':
+        200:
           description: The average of all data on a specific day
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MeasureAvg'
-          
-  
+
+  /data/{measureType}:
+    get:
+      tags:
+        - developers
+      summary: get all data of a specific type
+      parameters:
+        - name: measureType
+          in: path
+          required: true
+          description: The type of measure wanted
+          schema:
+            type : string
+            enum: [wind, pressure, temperature]
+      responses:
+        400:
+          description: Bad Request, explanation
+        500:
+          description: Internal server error, explanation
+        204:
+          description: No content available
+        200:
+          description: All data of a measure type
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeasureValue'
+
+  /data/{measureType}/{startDate}/{endDate}:
+    get:
+      tags:
+        - developers
+      summary: get all data of a specific type between start and end date
+      parameters:
+        - name: measureType
+          in: path
+          required: true
+          description: The type of measure wanted
+          schema:
+            type : string
+            enum: [wind, pressure, temperature]
+        - name: startDate
+          in: path
+          required: true
+          description: The start date of the interval, with the following format YYYY-MM-DD-hh:mm
+          schema:
+            type: string
+            example: 2023-01-05-10:05
+            minimum: 16
+            maximum: 16
+        - name: endDate
+          in: path
+          required: true
+          description: The end date of the interval, with the following format YYYY-MM-DD-hh:mm
+          schema:
+            type: string
+            example: 2023-01-05-10:05
+            minimum: 16
+            maximum: 16
+      responses:
+        400:
+          description: Bad Request, explanation
+        500:
+          description: Internal server error, explanation
+        204:
+          description: No data available for this day
+        200:
+          description: All data of a measure type in the date interval
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeasureValue'
+
   /average/{airportIATA}/{date}:
     get:
       tags:
@@ -52,15 +128,17 @@ paths:
           required: true
           description: The date of the day for which you want the average data, with the following format YYYY-MM-DD
           schema:
-            type : string
+            type: string
+            example: 2023-01-05
             minimum: 10
             maximum: 10
         - name: airportIATA
           in: path
           required: true
-          description: The IATA code (3 characters) of the airport whose data you want to retrieve 
+          description: The IATA code (3 characters) of the airport whose data you want to retrieve
           schema:
-            type : string
+            type: string
+            example: NTE
             minimum: 3
             maximum: 3
       responses:
@@ -78,7 +156,100 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MeasureAvg'
-            
+
+  /data/{airportIATA}/{measureType}:
+    get:
+      tags:
+        - developers
+      summary: get all data of a specific type by airport IATA code
+      parameters:
+        - name: measureType
+          in: path
+          required: true
+          description: The type of measure wanted
+          schema:
+            type : string
+            enum: [wind, pressure, temperature]
+        - name: airportIATA
+          in: path
+          required: true
+          description: The IATA code (3 characters) of the airport whose data you want to retrieve
+          schema:
+            type: string
+            example: NTE
+            minimum: 3
+            maximum: 3
+      responses:
+        400:
+          description: Bad Request, explanation
+        500:
+          description: Internal server error, explanation
+        204:
+          description: No content available
+        200:
+          description: All data of a measure type
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeasureValue'
+
+  /data/{airportIATA}/{measureType}/{startDate}/{endDate}:
+    get:
+      tags:
+        - developers
+      summary: get all data of a specific type between start and end date by airport IATA code
+      parameters:
+        - name: measureType
+          in: path
+          required: true
+          description: The type of measure wanted
+          schema:
+            type : string
+            enum: [wind, pressure, temperature]
+        - name: startDate
+          in: path
+          required: true
+          description: The start date of the interval, with the following format YYYY-MM-DD-hh:mm
+          schema:
+            type: string
+            example: 2023-01-05-10:05
+            minimum: 16
+            maximum: 16
+        - name: endDate
+          in: path
+          required: true
+          description: The end date of the interval, with the following format YYYY-MM-DD-hh:mm
+          schema:
+            type: string
+            example: 2023-01-05-10:05
+            minimum: 16
+            maximum: 16
+        - name: airportIATA
+          in: path
+          required: true
+          description: The IATA code (3 characters) of the airport whose data you want to retrieve
+          schema:
+            type: string
+            example: NTE
+            minimum: 3
+            maximum: 3
+      responses:
+        400:
+          description: Bad Request, explanation
+        500:
+          description: Internal server error, explanation
+        204:
+          description: No data available for this day
+        200:
+          description: All data of a measure type in the date interval
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeasureValue'
 
 components:
   schemas:
@@ -93,20 +264,20 @@ components:
       properties:
         airport_id:
           type: string
-          example: NTS
+          example: NTE
         date:
           type: string
-          example: 2023-01-05
+          example: 2023-01-05-10:05:05
         measure_nature:
           type: string
-          example: wind 
+          example: wind
         sensor_id:
           type: string
           example: 5
         value:
           type: number
           example: 15.092
-        
+
     MeasureAvg:
       type: object
       required:
@@ -119,7 +290,7 @@ components:
           example: 15.092
         temperature_average:
           type: number
-          example: 17.804
+          example: 21.804
         pressure_average:
           type: number
           example: 1034.644
