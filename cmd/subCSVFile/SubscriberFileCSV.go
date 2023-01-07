@@ -1,68 +1,96 @@
 package main
 
 import (
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
 	"foo.org/myapp/internal/config"
+	"foo.org/myapp/internal/entities"
 	"foo.org/myapp/internal/server"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+const csvPath = "./data/"
 type Measurement struct {
-	AirportIATA   string    `json:"airport_iata"`
-	Date          time.Time `json:"date"`
-	MeasureNature string    `json:"measure_nature"`
-	SensorID      int       `json:"sensor_id"`
-	Value         int       `json:"value"`
+	AirportID     string  `json:"airport_id"`
+	Date          string  `json:"date"`
+	MeasureNature string  `json:"measure_nature"`
+	SensorID      int     `json:"sensor_id"`
+	Value         float32 `json:"value"`
 }
 
-var csvFile *os.File
 
 func main() {
-	// Parse JSON object
-	var m Measurement
-	err := json.Unmarshal([]byte(`{"airport_iata":"NTS","date":"2023-01-04-13:46:53","measure_nature":"temperature","sensor_id":5,"value":3}`), &m)
+	subCSV()
+
+}
+
+func subCSV() {
+	client := server.Connect(config.GetFullURL(), "subscriberCSV")
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	client.Subscribe("temperature", 0, addToCSVFile)
+	client.Subscribe("wind", 0, addToCSVFile)
+	client.Subscribe("pressure", 0, addToCSVFile)
+	wg.Wait()
+}
+
+func dataFormat(message mqtt.Message) entities.MeasureValue {
+	var data entities.MeasureValue
+	s := message.Payload()
+	fmt.Println(string(s))
+	err := json.Unmarshal([]byte(s), &data)
 	if err != nil {
 		log.Fatal(err)
 	}
+	return data
 
-func addToCSVFile(_ mqtt.Client, message mqtt.Message) {
-
-	now := time.Now()
-	csvFile, err := os.Create(now.Format("2006-01-02-15:04:05") + ".csv")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	// Create CSV writer
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	// Write measurement to CSV
-	err = writer.Write([]string{m.AirportIATA, m.Date.Format("2006-01-02 15:04:05"), m.MeasureNature, fmt.Sprintf("%d", m.SensorID), fmt.Sprintf("%d", m.Value)})
-	if err != nil {
-		log.Println(err)
-	}
-
-	defer csvWriter.Flush()
-	// Save the file every 24 hours
-	for {
-		time.Sleep(60 * time.Second)
-
-		// Close the current file and create a new one with the updated date
-		csvFile.Close()
-		now = time.Now()
-		csvFile, err = os.Create(now.Format("2006-01-02-15:04:05") + ".csv")
+}
+func CreateFileCSV(data entities.MeasureValue, pathname string) {
+	if _, err := os.Stat(pathname); os.IsNotExist(err) {
+		file, err := os.Create(pathname)
 		if err != nil {
 			log.Fatal(err)
 		}
-		csvWriter = csv.NewWriter(csvFile)
+		defer file.Close()
+
+		file, err = os.OpenFile(pathname, os.O_APPEND|os.O_WRONLY, 0600)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if _, err := file.WriteString("AirportIATA,Date,MeasureNature,SensorId,Value\n"); err != nil {
+			log.Fatal(err)
+		}
+		if err = file.Close(); err != nil {
+			log.Fatal(err)
+		}
+
 	}
+}
+func WriteFileCSV(data entities.MeasureValue, pathname string) {
+
+	file, err := os.OpenFile(pathname, os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if _, err := file.WriteString(data.AirportIATA + "," + data.Date + "," + data.MeasureNature + "," + strconv.Itoa(data.SensorId) + "," + fmt.Sprintf("%.2f", data.Value) + "\n"); err != nil {
+		log.Fatal(err)
+	}
+	if err = file.Close(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func addToCSVFile(_ mqtt.Client, message mqtt.Message) {
+	data := dataFormat(message)
+	now := time.Now()
+	pathname := csvPath + data.AirportIATA + "_" + data.MeasureNature + "_" + string(now.Format("2006-01-02")) + ".csv"
+	CreateFileCSV(data, pathname)
+	WriteFileCSV(data, pathname)
+
 }
