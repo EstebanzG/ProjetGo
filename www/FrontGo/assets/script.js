@@ -101,7 +101,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     if (min < 10) {
       min = "0" + min;
     }
-    let minBefore = date.getMinutes() - 3;
+    let minBefore = date.getMinutes() - 2;
     if (minBefore < 0) {
       minBefore = 60 + minBefore;
       hour = hour - 1;
