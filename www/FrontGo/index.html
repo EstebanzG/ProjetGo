@@ -28,12 +28,14 @@
       <div class="content-area">
         <div class="container-fluid">
           <div class="main">
-            <!-- SIMPLE CHART DATA -->
+            <!-- SIMPLE CHART DATA-->
             <div class="row sparkboxes">
               <div class="col-md-3 infos">
                 <div class="box box1">
                   <div class="textInfo">
-                    <a class="textDataBold">MONDAY 04 JAN 2023</a><br />
+                    <a id="DOTD" class="textDataBold"
+                      >LOADING data of the day...</a
+                    ><br />
                     <a class="textDataBold">AIRPORT :</a>
                     <a class="textData">NTS</a>
                   </div>
@@ -43,7 +45,7 @@
               <div id="chartTemp"></div>
               <div id="chartPressure"></div>
             </div>
-            <!-- LINE CHARTS
+            <!-- LINE CHARTS-->
             <h1>History</h1>
             <div class="row charts">
               <div class="row">
@@ -67,16 +69,16 @@
                   </div>
                 </div>
               </div>
-            </div> -->
+            </div>
             <!-- AVERAGE CHART -->
             <h1>Average</h1>
             <div class="col" style="padding: 0">
               <div class="box mt-4 row charts">
                 <div class="mt-4">
-                  <div id="progress1"></div>
+                  <div id="progress2"></div>
                 </div>
                 <div class="mt-4">
-                  <div id="progress2"></div>
+                  <div id="progress1"></div>
                 </div>
                 <div class="mt-4">
                   <div id="progress3"></div>
