@@ -32,33 +32,47 @@ func pub() {
 
 func generate(oldTemp float32) float32 {
 	now := time.Now()
+	month := int(now.Month())
+
+	if month < 3 || month >= 12 { // Winter
+		return generateByMonth(-5, 5, oldTemp)
+	} else if month >= 3 || month < 6 { // Spring
+		return generateByMonth(5, 15, oldTemp)
+	} else if month >= 6 || month < 9 { // Summer
+		return generateByMonth(15, 35, oldTemp)
+	} else { // fall
+		return generateByMonth(0, 15, oldTemp)
+	}
+
+}
+
+func generateByMonth(minTemp float32, maxTemp float32, oldTemp float32) float32 {
+	now := time.Now()
 	hour := now.Hour()
+	rand.Seed(time.Now().UnixNano())
+
 	if oldTemp == 100.0 {
-		rand.Seed(time.Now().UnixNano())
 		if hour > 18 || hour < 10 {
-			// Between - 3 and 10
-			return rand.Float32()*10 - 3
+			return float32(rand.Intn(5)) + minTemp
 		} else {
-			// Between 5 and 30
-			return (rand.Float32()*5 + 1) * 5
+			return maxTemp - float32(rand.Intn(5))
 		}
 	}
 	var delta float32
 	if hour < 6 {
-		// Between -1 and 0,5
-		delta = rand.Float32()*1.5 - 1
-
+		// Between -1 and 1
+		delta = rand.Float32()*2 - 1
 	} else if hour < 14 {
-		// Between -0,5 and 2
-		delta = rand.Float32()*2.5 - 0.5
-	} else if hour < 17 {
-		// Between 1,5 and 0,5
-		delta = rand.Float32() + 0.5
+		// Between -1 and 2
+		delta = rand.Float32()*3 - 1
+	} else if hour < 18 {
+		// Between -1 and 1
+		delta = rand.Float32()*2 - 1
 	} else {
-		// Between -2 and +0,5
-		delta = rand.Float32()*-2.5 + 0.5
+		// Between -2 and 1
+		delta = rand.Float32()*-3 + 1
 	}
-	if oldTemp+delta < -5 || oldTemp+delta > 30 {
+	if oldTemp+delta < minTemp || oldTemp+delta > maxTemp {
 		return oldTemp
 	}
 	return oldTemp + delta

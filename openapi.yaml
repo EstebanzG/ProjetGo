@@ -256,13 +256,13 @@ components:
     MeasureValue:
       type: object
       required:
-        - airport_id
+        - airport_iata
         - date
         - measure_nature
         - sensor_id
         - value
       properties:
-        airport_id:
+        airport_iata:
           type: string
           example: NTE
         date:
