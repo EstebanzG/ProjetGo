@@ -37,7 +37,7 @@ func generate(oldWind float32) float32 {
 		return float32(10 + rand.Intn(16))
 	}
 	// Between -1 and +1
-	delta := float32(-1 + rand.Intn(3))
+	delta := float32(-1 + rand.Intn(2))
 	if oldWind+delta < 5 || oldWind+delta > 130 {
 		return oldWind
 	}
