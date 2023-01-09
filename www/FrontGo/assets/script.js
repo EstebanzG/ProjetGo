@@ -35,7 +35,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
       theme: "dark",
       x: {
         formatter: function (val) {
-          return "Valeur du " + val;
+          return "Valeur";
         },
       },
     },
@@ -282,7 +282,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
         },
         dataLabels: {
           name: {
-            offsetY: -30,
+            offsetY: -37,
             color: "#fff",
             fontSize: "13px",
           },
@@ -347,7 +347,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
         },
         dataLabels: {
           name: {
-            offsetY: -30,
+            offsetY: -37,
             color: "#fff",
             fontSize: "13px",
           },
@@ -412,7 +412,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
         },
         dataLabels: {
           name: {
-            offsetY: -30,
+            offsetY: -37,
             color: "#fff",
             fontSize: "13px",
           },
@@ -422,7 +422,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             fontSize: "30px",
             show: true,
             formatter: function (value) {
-              return "0 P";
+              return "0 hPa";
             },
           },
         },
@@ -648,26 +648,22 @@ window.addEventListener("DOMContentLoaded", (event) => {
   var tabDate = [];
   var tabData = [];
   for (let index = 8; index >= 0; index--) {
-    var m = date.getMonth() + 1;
-    var d = date.getDate() - index;
+    var h = date.getHours();
+    var m = date.getMinutes() - index * 5;
     if (index == 8) {
       tabDate.push("....");
       tabData.push(0);
     } else {
-      if (d < 1) {
-        d = 31 + d;
-        if (m == 1) {
-          m = 12;
-        } else {
-          m--;
-        }
-      } else if (d < 10) {
-        d = "0" + d;
-      }
-      if (m < 10) {
+      if (m < 0) {
+        m = 60 + m;
+        h--;
+      } else if (m < 10) {
         m = "0" + m;
       }
-      tabDate.push(`${d}/${m}`);
+      if (h < 10) {
+        h = "0" + h;
+      }
+      tabDate.push(`${h}:${m}`);
       tabData.push(0);
     }
   }
@@ -897,7 +893,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
       },
     },
     subtitle: {
-      text: "P",
+      text: "hPa",
       floating: true,
       align: "right",
       offsetY: 0,
@@ -985,7 +981,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
             element.date <= dateComplete
           ) {
             //console.log("Pression : " + Math.round(element.value * 10) / 10);
-            var valeur = Math.round(element.value * 10) / 10;
+            var valeur = Math.round(element.value);
             chartPressure.updateSeries([valeur / 20]);
             chartPressure.updateOptions({
               plotOptions: {
@@ -993,7 +989,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
                   dataLabels: {
                     value: {
                       formatter: function (value) {
-                        return valeur + " P";
+                        return valeur + "hPa";
                       },
                     },
                   },
@@ -1044,7 +1040,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
         ]);
         chartProgress3.updateOptions({
           subtitle: {
-            text: Math.round(data.pressure_average) + " Pascal",
+            text: Math.round(data.pressure_average) + " hPa",
           },
         });
       });
