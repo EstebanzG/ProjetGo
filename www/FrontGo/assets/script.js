@@ -35,7 +35,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
       theme: "dark",
       x: {
         formatter: function (val) {
-          return moment(new Date(val)).format("HH:mm:ss");
+          return "Valeur du " + date;
         },
       },
     },
@@ -715,7 +715,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     markers: {
       size: 0,
       hover: {
-        size: 0,
+        size: 3,
       },
     },
     series: [
