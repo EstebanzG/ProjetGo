@@ -35,7 +35,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
       theme: "dark",
       x: {
         formatter: function (val) {
-          return "Valeur du " + date;
+          return "Valeur du " + val;
         },
       },
     },
@@ -250,7 +250,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
     if (min < 10) {
       min = "0" + min;
     }
-    let DOTD = `${today} ${day} ${monthDOTD} ${year} (${hour}:${min})`;
+    let DOTD = `${today} ${day} ${monthDOTD} ${year} ${hour}:${min}`;
     document.getElementById("DOTD").innerText = DOTD;
   }
   // TEMPERATURE GAUGE
@@ -915,13 +915,15 @@ window.addEventListener("DOMContentLoaded", (event) => {
   );
   chartLine3.render();
 
+  // DEFAULT AIRPORT
+  console.log("Aéroport de Nantes - NTE");
   window.setInterval(() => {
     generateDateTitle();
     var cd = generateDate();
     var dateComplete = generateCompleteDate();
     var dateCompletePrevious = generatePreviousCompleteDate();
     //console.log("DATA From : " + dateCompletePrevious + " to : " + dateComplete);
-    fetch("http://localhost:8080/data/temperature")
+    fetch(`http://localhost:8080/data/NTE/temperature`)
       .then((response) => response.json())
       .then((data) => {
         data.forEach((element) => {
@@ -948,7 +950,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
           }
         });
       });
-    fetch("http://localhost:8080/data/wind")
+    fetch(`http://localhost:8080/data/NTE/wind`)
       .then((response) => response.json())
       .then((data) => {
         data.forEach((element) => {
@@ -974,7 +976,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
           }
         });
       });
-    fetch("http://localhost:8080/data/pressure")
+    fetch(`http://localhost:8080/data/NTE/pressure`)
       .then((response) => response.json())
       .then((data) => {
         data.forEach((element) => {
@@ -1001,7 +1003,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
           }
         });
       });
-    fetch(`http://localhost:8080/average/${cd}`)
+    fetch(`http://localhost:8080/average/NTE/${cd}`)
       .then((response) => response.json())
       .then((data) => {
         chartProgress2.updateSeries([
@@ -1016,7 +1018,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
           },
         });
       });
-    fetch(`http://localhost:8080/average/${cd}`)
+    fetch(`http://localhost:8080/average/NTE/${cd}`)
       .then((response) => response.json())
       .then((data) => {
         chartProgress1.updateSeries([
@@ -1031,7 +1033,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
           },
         });
       });
-    fetch(`http://localhost:8080/average/${cd}`)
+    fetch(`http://localhost:8080/average/NTE/${cd}`)
       .then((response) => response.json())
       .then((data) => {
         chartProgress3.updateSeries([
@@ -1049,8 +1051,8 @@ window.addEventListener("DOMContentLoaded", (event) => {
 
     var pre = generatePreviousDate();
     var cur = generateCurrentDate();
-    console.log(pre + " -> " + cur);
-    fetch(`http://localhost:8080/data/wind/${pre}/${cur}`)
+    //console.log(pre + " -> " + cur);
+    fetch(`http://localhost:8080/data/NTE/wind/${pre}/${cur}`)
       .then((response) => response.json())
       .then((data) => {
         var tab = [];
@@ -1063,7 +1065,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
           },
         ]);
       });
-    fetch(`http://localhost:8080/data/temperature/${pre}/${cur}`)
+    fetch(`http://localhost:8080/data/NTE/temperature/${pre}/${cur}`)
       .then((response) => response.json())
       .then((data) => {
         var tab2 = [];
@@ -1076,7 +1078,7 @@ window.addEventListener("DOMContentLoaded", (event) => {
           },
         ]);
       });
-    fetch(`http://localhost:8080/data/pressure/${pre}/${cur}`)
+    fetch(`http://localhost:8080/data/NTE/pressure/${pre}/${cur}`)
       .then((response) => response.json())
       .then((data) => {
         var tab3 = [];
