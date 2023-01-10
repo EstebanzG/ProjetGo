@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"foo.org/myapp/internal/config"
-	"foo.org/myapp/internal/format"
 	"math/rand"
 	"time"
+
+	"foo.org/myapp/internal/config"
+	"foo.org/myapp/internal/format"
 
 	"foo.org/myapp/internal/server"
 )
@@ -37,7 +38,7 @@ func generate(oldWind float32) float32 {
 		return float32(10 + rand.Intn(16))
 	}
 	// Between -1 and +1
-	delta := float32(-1 + rand.Intn(2))
+	delta := float32(-1 + rand.Intn(3))
 	if oldWind+delta < 5 || oldWind+delta > 130 {
 		return oldWind
 	}
